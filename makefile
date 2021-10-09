@@ -12,8 +12,8 @@
 Compiler =g++  -std=c++11
 LDLIBS =-lGLEW -lGL -lX11 -lglfw
 Remove =rm
-Object =AidanBeckerAssignment3.cpp -o
-Name =AidanBeckerAssignment3.out
+Object =AidanBeckerAssignment4.cpp -o
+Name =AidanBeckerAssignment4.out
 	
 assignment5:
 	$(Compiler) $(Object) $(Name) $(LDLIBS)
