@@ -8,18 +8,14 @@
 
 //Project-specific includes
 #include "SierpinskiPyramid.h"
-#include "glCamera.h"
-
-// Length of each side in the cube
-const int sideLength = 2;
+#include "AidanGLCamera.h"
 
 
 // Declaration of Camera object
 Camera camera = Camera();
 
-// Flags for the translation and rotation required by the lab
-bool translateMeshes = false;
-bool rotateMeshes = false;
+// Declaration of Sierpinski Pyramid object
+SierpinskiPyramid pyramid = SierpinskiPyramid();
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -27,11 +23,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-
+        pyramid.fractalize();
     }
     else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-
+        pyramid.reset();
     }
 
 }
@@ -80,12 +76,12 @@ void glfwErrorCB(int error, const char* description) {
 int main() {
     int windowWidth, windowHeight, windowSizeX, windowSizeY;    //Screen space values
 
-    const float cameraSpeed = 0.15f * sideLength;               //Camera speed
+    const float cameraSpeed = 0.3f;
     const float mouseSensitivity = 0.05f;                       //Mouse sensitivity
     float horizontalAngle = 0.0f;                               //initial camera angle
     float verticalAngle = 0.0f;                                 //initial camera angle
     float initialFoV = 62.0f;                                   //initial camera field of view
-    glm::vec3 cameraPosition(0, 0, -1);                         //initial camera position
+    glm::vec3 cameraPosition(0, 0, -2);                         //initial camera position
 
     // Start a timer to limit framerate and get other information
     double start = glfwGetTime();
@@ -95,7 +91,7 @@ int main() {
     //Initialize variables for translation and rotation speed
     glm::vec3 translation = glm::vec3(0.01, 0, 0);
     glm::vec3 rotationAxis = glm::vec3(0, 1, 0);
-    float rotationSpeed = 0.2/sideLength;
+    float rotationSpeed = 0.2;
     float currentRotation = 0;
 
     // Necessary due to glew bug
@@ -150,6 +146,13 @@ int main() {
         cameraSpeed*2, mouseSensitivity
     );
 
+    pyramid.init(window, 
+        glm::vec3(0, 0, 0),                         //position in non-modelspace
+        glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
+        glm::rotate(0.0f, glm::vec3(0, 1, 0))       //rotation in non-modelspace
+    );
+
+
     // Set callback functions for user input
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -184,14 +187,15 @@ int main() {
 
             // Update the camera's data based on user input
             camera.update();
-
+            pyramid.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
 
             glfwSwapBuffers(window);    // actually draw
         }
 
     } // Check if the ESC key was pressed or the window was closed
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
-        glfwWindowShouldClose(window) == 0 );
+        glfwWindowShouldClose(window) == 0);
+    
 
     return 0;
 }

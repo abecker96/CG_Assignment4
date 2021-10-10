@@ -1,7 +1,7 @@
 
 
-#ifndef GLCAMERA_H
-#define GLCAMERA_H
+#ifndef AGLCAMERA_H
+#define AGLCAMERA_H
 
 //General includes
 #include <math.h>
