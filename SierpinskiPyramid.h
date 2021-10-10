@@ -56,9 +56,13 @@ class SierpinskiPyramid {
             if(wireframeColorRef < 0)
             {   std::cerr<< "couldn't find wireframeColor in shader\n"; }
 
-            // // Set wireframe color
-            // glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
+            // initialize colorType reference in shaders
+            colorTypeRef = glGetUniformLocation(tetrahedronShader, "colorType");
+            if(colorTypeRef < 0)
+            {   std::cerr<< "couldn't find colorType in shader\n"; }
 
+            // Set initial wireframe color
+            glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
 
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
@@ -91,7 +95,10 @@ class SierpinskiPyramid {
             // Render relative to the camera
             updateMVPArray(viewMatrix, projectionMatrix);
             glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
-            
+
+            // Set wireframe color
+            glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
+
             glEnable(GL_CULL_FACE);  
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -103,7 +110,6 @@ class SierpinskiPyramid {
                 0,
                 (void*)0
             );
-
 
             // draw triangle faces
             if(renderFaces)
@@ -117,8 +123,8 @@ class SierpinskiPyramid {
                 renderAsWireframe();
             }
 
-            glDisableVertexAttribArray(0);
             glDisable(GL_CULL_FACE);
+            glDisableVertexAttribArray(0);
         }
         void fractalize()
         {
@@ -158,13 +164,14 @@ class SierpinskiPyramid {
         // The above matrices are just friendly names instead of requiring me to remember index 0 == O2Wmatrix etc
         glm::mat4 MVPMatrices[5];
         GLuint tetrahedronShader, buffer, vao, ibo;
-        GLint MVPMatrices_ref, wireframeColorRef;
+        GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef;
         GLFWwindow* window;
         glm::vec3 defaultPosition;
         glm::vec3 wireframeColor = glm::vec3(1.0, 1.0, 1.0);    //Color for the wireframe
         std::vector<glm::vec3> tetrahedronVerts;
         std::vector<Tetrahedron> tetrahedrons;
         bool renderFaces, renderWireframe;
+        int colorType;
         float currentTime;
         // color palettes
         const float colorPalettes[3] = {
@@ -180,12 +187,16 @@ class SierpinskiPyramid {
             MVPMatrices[4] = projectionMatrix;
         }
         void renderAsFaces()
-        {
+        {  
             // Set polygon mode to fill
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);  
+
+            // Send colorType for faces to shader
+            glUniform1i(colorTypeRef, 1);
+
             glDrawElements(
                 GL_TRIANGLES,
                 tetrahedrons.size()*100000,
@@ -200,9 +211,17 @@ class SierpinskiPyramid {
             glPolygonOffset(0.1, -1);
             // Set polygon mode to line
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                      
+            // Send colorType for wireframe to shader
+            glUniform1i(colorTypeRef, 0);
 
             // Actually draw wireframe
-            // TODO:
+            glDrawElements(
+                GL_TRIANGLES,
+                tetrahedrons.size()*100000,
+                GL_UNSIGNED_INT,
+                (void*)0
+            );
 
             glDisable(GL_POLYGON_OFFSET_LINE);
 

@@ -3,7 +3,8 @@
 
 // in vec3 fragmentColor;
 in vec3 vPosition_out;
-// uniform vec3 wireframeColor;
+uniform vec3 wireframeColor;
+uniform int colorType;
 
 out vec4 color;
 
@@ -25,5 +26,12 @@ void main() {
     //         1
     //     );
     // }
-    color = vec4(vPosition_out, 1);
+    if(colorType == 0)
+    {
+        color = vec4(wireframeColor, 1);
+    }
+    else
+    {
+        color = vec4(vPosition_out, 1);
+    }
 }
