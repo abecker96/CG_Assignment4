@@ -199,7 +199,7 @@ class SierpinskiPyramid {
 
             glDrawElements(
                 GL_TRIANGLES,
-                tetrahedrons.size()*100000,
+                tetrahedrons.size()*12,
                 GL_UNSIGNED_INT,
                 (void*)0
             );
@@ -218,7 +218,7 @@ class SierpinskiPyramid {
             // Actually draw wireframe
             glDrawElements(
                 GL_TRIANGLES,
-                tetrahedrons.size()*100000,
+                tetrahedrons.size()*12,
                 GL_UNSIGNED_INT,
                 (void*)0
             );
@@ -290,13 +290,16 @@ class SierpinskiPyramid {
             tetrahedronVerts.clear();
             tetrahedrons.clear();
 
-            tetrahedronVerts.push_back(glm::vec3(1, 1, 1));
-            tetrahedronVerts.push_back(glm::vec3(1, -1, -1));
-            tetrahedronVerts.push_back(glm::vec3(-1, 1, -1));
-            tetrahedronVerts.push_back(glm::vec3(-1, -1, 1));
+            tetrahedronVerts.push_back(glm::vec3(0.0, 0.0, 1));
+            tetrahedronVerts.push_back(glm::vec3(0.0, 0.942809, -0.33333));
+            tetrahedronVerts.push_back(glm::vec3(-0.816497, -0.471405, -0.333333));
+            tetrahedronVerts.push_back(glm::vec3(0.816497, -0.471405, -0.333333));
 
             tetrahedrons.push_back(Tetrahedron(0, 1, 2, 3));
             std::cout << "Resetting pyramids, size=" << tetrahedrons.size() << std::endl;
+
+            setIndexBufferData();
+            setVertexBufferData();
         }
 
         void fractalizePyramid()

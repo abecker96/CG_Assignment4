@@ -149,7 +149,7 @@ int main() {
     pyramid.init(window, 
         glm::vec3(0, 0, 0),                         //position in non-modelspace
         glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-        glm::rotate(0.0f, glm::vec3(0, 1, 0))       //rotation in non-modelspace
+        glm::rotate(glm::radians(-90.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
     );
 
 
