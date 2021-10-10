@@ -19,35 +19,8 @@
 
 //Project-specific includes
 #include "LoadShaders.h"
+#include "Tetrahedron.h"
 
-struct Tetrahedron {
-    public:
-        Tetrahedron(int v0, int v1, int v2, int v3)
-        {
-            verticesIdx[0] = v0;
-            verticesIdx[1] = v1;
-            verticesIdx[2] = v2;
-            verticesIdx[3] = v3;
-
-            faces[0] = glm::ivec3(verticesIdx[0], verticesIdx[1], verticesIdx[2]);
-            faces[1] = glm::ivec3(verticesIdx[2], verticesIdx[3], verticesIdx[1]);
-            faces[2] = glm::ivec3(verticesIdx[0], verticesIdx[2], verticesIdx[3]);
-            faces[3] = glm::ivec3(verticesIdx[0], verticesIdx[3], verticesIdx[1]);
-
-            std::cout << "new tetrahedron indices: ";
-            for(int i = 0; i < 4; i++)
-            {
-                std::cout << faces[i].x << " ";
-                std::cout << faces[i].y << " ";
-                std::cout << faces[i].z << " ";
-            }
-            std::cout << std::endl;
-        }
-        // Store all indices used in this tetrahedron
-        int verticesIdx[4];
-        // Store the relationship between faces and indices with correct spin
-        glm::ivec3 faces[4];
-};
 
 
 // SierpinskiPyramid class
@@ -119,6 +92,7 @@ class SierpinskiPyramid {
             updateMVPArray(viewMatrix, projectionMatrix);
             glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
             
+            glEnable(GL_CULL_FACE);  
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
             glVertexAttribPointer(
@@ -129,6 +103,7 @@ class SierpinskiPyramid {
                 0,
                 (void*)0
             );
+
 
             // draw triangle faces
             if(renderFaces)
@@ -143,6 +118,7 @@ class SierpinskiPyramid {
             }
 
             glDisableVertexAttribArray(0);
+            glDisable(GL_CULL_FACE);
         }
         void fractalize()
         {
@@ -260,21 +236,21 @@ class SierpinskiPyramid {
             unsigned int* triIndices = new unsigned int[tetrahedrons.size()*4*3];
             for(int i = 0; i < tetrahedrons.size(); i++)
             {
-                triIndices[(i*3)+0] = tetrahedrons[i].faces[0].x;
-                triIndices[(i*3)+1] = tetrahedrons[i].faces[0].y;
-                triIndices[(i*3)+2] = tetrahedrons[i].faces[0].z;
+                triIndices[(i*4*3)+0] = tetrahedrons[i].faces[0].x;
+                triIndices[(i*4*3)+1] = tetrahedrons[i].faces[0].y;
+                triIndices[(i*4*3)+2] = tetrahedrons[i].faces[0].z;
                 
-                triIndices[(i*3)+3] = tetrahedrons[i].faces[1].x;
-                triIndices[(i*3)+4] = tetrahedrons[i].faces[1].y;
-                triIndices[(i*3)+5] = tetrahedrons[i].faces[1].z;
+                triIndices[(i*4*3)+3] = tetrahedrons[i].faces[1].x;
+                triIndices[(i*4*3)+4] = tetrahedrons[i].faces[1].y;
+                triIndices[(i*4*3)+5] = tetrahedrons[i].faces[1].z;
 
-                triIndices[(i*3)+6] = tetrahedrons[i].faces[2].x;
-                triIndices[(i*3)+7] = tetrahedrons[i].faces[2].y;
-                triIndices[(i*3)+8] = tetrahedrons[i].faces[2].z;
+                triIndices[(i*4*3)+6] = tetrahedrons[i].faces[2].x;
+                triIndices[(i*4*3)+7] = tetrahedrons[i].faces[2].y;
+                triIndices[(i*4*3)+8] = tetrahedrons[i].faces[2].z;
 
-                triIndices[(i*3)+9] = tetrahedrons[i].faces[3].x;
-                triIndices[(i*3)+10] = tetrahedrons[i].faces[3].y;
-                triIndices[(i*3)+11] = tetrahedrons[i].faces[3].z;
+                triIndices[(i*4*3)+9] = tetrahedrons[i].faces[3].x;
+                triIndices[(i*4*3)+10] = tetrahedrons[i].faces[3].y;
+                triIndices[(i*4*3)+11] = tetrahedrons[i].faces[3].z;
             }
             // for(int i = 0; i < tetrahedrons.size()*12; i++)
             // {
@@ -361,17 +337,17 @@ class SierpinskiPyramid {
                 int v9 = tetrahedronVerts.size()-1;
 
                 // Add 4 more tetrahedrons in its place
-                tetrahedrons.push_back(Tetrahedron(v0, v4, v6, v7));
-                tetrahedrons.push_back(Tetrahedron(v1, v5, v4, v8));
-                // tetrahedrons.push_back(Tetrahedron(v2, v5, v6, v9));
-                // tetrahedrons.push_back(Tetrahedron(v3, v7, v8, v9));
+                tetrahedrons.push_back(Tetrahedron(v0, v6, v7, v4));
+                tetrahedrons.push_back(Tetrahedron(v1, v8, v5, v4));
+                tetrahedrons.push_back(Tetrahedron(v2, v9, v6, v5));
+                tetrahedrons.push_back(Tetrahedron(v3, v9, v8, v7));
             }
             for(int i = 0; i < startSize; i++)
             {
                 // Remove the base tetrahedrons
                 tetrahedrons.erase(tetrahedrons.begin());
             }
-            std::cout << "tetrahedrons.size(): " << tetrahedrons.size() << std::endl;
+            // std::cout << "tetrahedrons.size(): " << tetrahedrons.size() << std::endl;
             setVertexBufferData();
             setIndexBufferData();
 
