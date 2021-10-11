@@ -19,7 +19,7 @@
 
 //Project-specific includes
 #include "LoadShaders.h"
-#include "Tetrahedron.h"
+#include "Primitives.h"
 
 
 
@@ -37,27 +37,28 @@ class SierpinskiPyramid {
             // resetPosition();
             scalingMatrix = scale;
             translationMatrix = glm::translate(position);
-            rotationMatrix = rotation;
+            rotationMatrix = glm::mat4(1);
+            defaultRotationMatrix = rotation;
 
             // Generate initial point data
             resetPyramid();
 
             // // Load and compile shaders
-            tetrahedronShader = LoadShaders("tetrahedronShader.vrt.glsl", "tetrahedronShader.frg.glsl");
-            glUseProgram(tetrahedronShader);
+            baseShader = LoadShaders("baseShader.vrt.glsl", "baseShader.frg.glsl");
+            glUseProgram(baseShader);
 
             // initialize MVP Matrix array reference in shader
-            MVPMatrices_ref = glGetUniformLocation(tetrahedronShader, "matrices");
+            MVPMatrices_ref = glGetUniformLocation(baseShader, "matrices");
             if(MVPMatrices_ref < 0)
             {   std::cerr << "couldn't find MVP matrices in shader\n";  }
 
             // initialize wireframe color reference in shaders
-            wireframeColorRef = glGetUniformLocation(tetrahedronShader, "wireframeColor");
+            wireframeColorRef = glGetUniformLocation(baseShader, "wireframeColor");
             if(wireframeColorRef < 0)
             {   std::cerr<< "couldn't find wireframeColor in shader\n"; }
 
             // initialize colorType reference in shaders
-            colorTypeRef = glGetUniformLocation(tetrahedronShader, "colorType");
+            colorTypeRef = glGetUniformLocation(baseShader, "colorType");
             if(colorTypeRef < 0)
             {   std::cerr<< "couldn't find colorType in shader\n"; }
 
@@ -144,6 +145,7 @@ class SierpinskiPyramid {
         }
         void setRotation(float angle, glm::vec3 axis)
         {
+            // rotationMatrix = glm::rotate(rotationMatrix, angle, axis);
             rotationMatrix = glm::rotate(angle, axis);
         }
         void setPosition(const glm::vec3 &position)
@@ -159,11 +161,11 @@ class SierpinskiPyramid {
             setPosition(defaultPosition);
         }
     private:
-        glm::mat4 objectToWorldMatrix, translationMatrix, scalingMatrix, rotationMatrix, rotateOriginMatrix;
+        glm::mat4 objectToWorldMatrix, translationMatrix, scalingMatrix, rotationMatrix, defaultRotationMatrix;
         // MVPMatrices will contain the same data as the 5 matrices above
         // The above matrices are just friendly names instead of requiring me to remember index 0 == O2Wmatrix etc
         glm::mat4 MVPMatrices[5];
-        GLuint tetrahedronShader, buffer, vao, ibo;
+        GLuint baseShader, buffer, vao, ibo;
         GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef;
         GLFWwindow* window;
         glm::vec3 defaultPosition;
@@ -181,7 +183,7 @@ class SierpinskiPyramid {
         {
             // This order is *really* important
             MVPMatrices[0] = scalingMatrix;
-            MVPMatrices[1] = rotationMatrix;
+            MVPMatrices[1] = rotationMatrix * defaultRotationMatrix;
             MVPMatrices[2] = translationMatrix;
             MVPMatrices[3] = viewMatrix;
             MVPMatrices[4] = projectionMatrix;
@@ -235,9 +237,6 @@ class SierpinskiPyramid {
                 vertices[(i*3)+0] = tetrahedronVerts[i].x;
                 vertices[(i*3)+1] = tetrahedronVerts[i].y;
                 vertices[(i*3)+2] = tetrahedronVerts[i].z;
-                // std::cout << "Vertex: " << vertices[(i*3)+0] << ", "
-                //     << vertices[(i*3)+1] << ", "
-                //     << vertices[(i*3)+2] << "\n";
             }
 
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -255,27 +254,16 @@ class SierpinskiPyramid {
             unsigned int* triIndices = new unsigned int[tetrahedrons.size()*4*3];
             for(int i = 0; i < tetrahedrons.size(); i++)
             {
-                triIndices[(i*4*3)+0] = tetrahedrons[i].faces[0].x;
-                triIndices[(i*4*3)+1] = tetrahedrons[i].faces[0].y;
-                triIndices[(i*4*3)+2] = tetrahedrons[i].faces[0].z;
-                
-                triIndices[(i*4*3)+3] = tetrahedrons[i].faces[1].x;
-                triIndices[(i*4*3)+4] = tetrahedrons[i].faces[1].y;
-                triIndices[(i*4*3)+5] = tetrahedrons[i].faces[1].z;
-
-                triIndices[(i*4*3)+6] = tetrahedrons[i].faces[2].x;
-                triIndices[(i*4*3)+7] = tetrahedrons[i].faces[2].y;
-                triIndices[(i*4*3)+8] = tetrahedrons[i].faces[2].z;
-
-                triIndices[(i*4*3)+9] = tetrahedrons[i].faces[3].x;
-                triIndices[(i*4*3)+10] = tetrahedrons[i].faces[3].y;
-                triIndices[(i*4*3)+11] = tetrahedrons[i].faces[3].z;
+                for(int j = 0; j < 4; j++)      //j < 4 (faces per tetrahedron)
+                {            
+                    //        [i*12 indices per tetrahedron +
+                    //                  j*3 vertices per face +
+                    //                        x, y, z coord in a vertex]
+                    triIndices[(i*12) + (j*3)+0] = tetrahedrons[i].faces[j].x;
+                    triIndices[(i*12) + (j*3)+1] = tetrahedrons[i].faces[j].y;
+                    triIndices[(i*12) + (j*3)+2] = tetrahedrons[i].faces[j].z;
+                }
             }
-            // for(int i = 0; i < tetrahedrons.size()*12; i++)
-            // {
-            //     std::cout << "new index: " << triIndices[i] << " ";
-            // }
-            // std::cout << std::endl;
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
             glBufferData(
                 GL_ELEMENT_ARRAY_BUFFER, 
@@ -314,48 +302,18 @@ class SierpinskiPyramid {
                 int v3 = tetrahedrons[i].verticesIdx[3];
 
                 // Create vertices at midpoints, add to vertex vector
-                // tetrahedronVerts.push_back((tetrahedronVerts[v0] + tetrahedronVerts[v1])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v0].x + tetrahedronVerts[v1].x)/2.0,
-                    (tetrahedronVerts[v0].y + tetrahedronVerts[v1].y)/2.0,
-                    (tetrahedronVerts[v0].z + tetrahedronVerts[v1].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v0] + tetrahedronVerts[v1])/2.0f);
                 // Save the index of each new vertex
                 int v4 = tetrahedronVerts.size()-1;
-                // tetrahedronVerts.push_back((tetrahedronVerts[v1] + tetrahedronVerts[v2])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v1].x + tetrahedronVerts[v2].x)/2.0,
-                    (tetrahedronVerts[v1].y + tetrahedronVerts[v2].y)/2.0,
-                    (tetrahedronVerts[v1].z + tetrahedronVerts[v2].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v1] + tetrahedronVerts[v2])/2.0f);
                 int v5 = tetrahedronVerts.size()-1;
-                // tetrahedronVerts.push_back((tetrahedronVerts[v2] + tetrahedronVerts[v0])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v2].x + tetrahedronVerts[v0].x)/2.0,
-                    (tetrahedronVerts[v2].y + tetrahedronVerts[v0].y)/2.0,
-                    (tetrahedronVerts[v2].z + tetrahedronVerts[v0].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v2] + tetrahedronVerts[v0])/2.0f);
                 int v6 = tetrahedronVerts.size()-1;
-                // tetrahedronVerts.push_back((tetrahedronVerts[v0] + tetrahedronVerts[v2])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v0].x + tetrahedronVerts[v3].x)/2.0,
-                    (tetrahedronVerts[v0].y + tetrahedronVerts[v3].y)/2.0,
-                    (tetrahedronVerts[v0].z + tetrahedronVerts[v3].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v0] + tetrahedronVerts[v3])/2.0f);
                 int v7 = tetrahedronVerts.size()-1;
-                // tetrahedronVerts.push_back((tetrahedronVerts[v1] + tetrahedronVerts[v3])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v1].x + tetrahedronVerts[v3].x)/2.0,
-                    (tetrahedronVerts[v1].y + tetrahedronVerts[v3].y)/2.0,
-                    (tetrahedronVerts[v1].z + tetrahedronVerts[v3].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v1] + tetrahedronVerts[v3])/2.0f);
                 int v8 = tetrahedronVerts.size()-1;
-                // tetrahedronVerts.push_back((tetrahedronVerts[v2] + tetrahedronVerts[v3])/2.0f);
-                tetrahedronVerts.push_back(glm::vec3(
-                    (tetrahedronVerts[v2].x + tetrahedronVerts[v3].x)/2.0,
-                    (tetrahedronVerts[v2].y + tetrahedronVerts[v3].y)/2.0,
-                    (tetrahedronVerts[v2].z + tetrahedronVerts[v3].z)/2.0
-                ));
+                tetrahedronVerts.push_back((tetrahedronVerts[v2] + tetrahedronVerts[v3])/2.0f);
                 int v9 = tetrahedronVerts.size()-1;
 
                 // Add 4 more tetrahedrons in its place
