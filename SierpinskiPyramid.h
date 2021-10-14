@@ -44,7 +44,7 @@ class SierpinskiPyramid {
             resetPyramid();
 
             // // Load and compile shaders
-            baseShader = LoadShaders("baseShader.vrt.glsl", "baseShader.frg.glsl");
+            baseShader = LoadShaders("baseShader.vrt.glsl", "baseShader.geo.glsl", "baseShader.frg.glsl");
             glUseProgram(baseShader);
 
             // initialize MVP Matrix array reference in shader
@@ -61,6 +61,11 @@ class SierpinskiPyramid {
             colorTypeRef = glGetUniformLocation(baseShader, "colorType");
             if(colorTypeRef < 0)
             {   std::cerr<< "couldn't find colorType in shader\n"; }
+
+            // initialize geoTimer reference in shaders
+            geoTimerRef = glGetUniformLocation(baseShader, "geoTimer");
+            if(geoTimerRef < 0)
+            {   std::cerr<< "couldn't find geoTimer in shader\n"; }
 
             // Set initial wireframe color
             glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
@@ -100,7 +105,10 @@ class SierpinskiPyramid {
             // Set wireframe color
             glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
 
-            glEnable(GL_CULL_FACE);  
+            //set geoTimer
+            glUniform1f(geoTimerRef, (float)glfwGetTime());
+
+            glDisable(GL_CULL_FACE);  
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
             glVertexAttribPointer(
@@ -166,7 +174,7 @@ class SierpinskiPyramid {
         // The above matrices are just friendly names instead of requiring me to remember index 0 == O2Wmatrix etc
         glm::mat4 MVPMatrices[5];
         GLuint baseShader, buffer, vao, ibo;
-        GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef;
+        GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef, geoTimerRef;
         GLFWwindow* window;
         glm::vec3 defaultPosition;
         glm::vec3 wireframeColor = glm::vec3(1.0, 1.0, 1.0);    //Color for the wireframe

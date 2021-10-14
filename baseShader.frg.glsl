@@ -1,8 +1,9 @@
-#version 400
+#version 330 core
 //FRAGMENT SHADER
 
 // in vec3 fragmentColor;
-in vec3 vPosition_out;
+in vec3 vPosition_modelspace1;
+
 uniform vec3 wireframeColor;
 uniform int colorType;
 
@@ -32,6 +33,6 @@ void main() {
     }
     else
     {
-        color = vec4(vPosition_out, 1);
+        color = vec4(vPosition_modelspace1, 1);
     }
 }

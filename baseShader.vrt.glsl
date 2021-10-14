@@ -1,4 +1,4 @@
-#version 400
+#version 330 core
 //VERTEX SHADER
 
 // layout location needs to match attribute in glVertexAttribPointer()
@@ -10,8 +10,7 @@ layout(location = 0) in vec3 vPosition_Modelspace;
 //scaling, rotation, translation, view, projection matrices
 uniform mat4 matrices[5];
 
-// out vec3 fragmentColor;
-out vec3 vPosition_out;
+out vec3 vPosition_modelspace0;
 
 void main() {
     //link vertexPos with gl_Position
@@ -21,5 +20,5 @@ void main() {
 
     //forward color data on to fragment shader
     // fragmentColor = vertexColor;
-    vPosition_out = vPosition_Modelspace;
+    vPosition_modelspace0 = vPosition_Modelspace;
 }
