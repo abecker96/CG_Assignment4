@@ -8,7 +8,7 @@
 
 //Project-specific includes
 #include "SierpinskiPyramid.h"
-#include "MengerSponge.h"
+// #include "MengerSponge.h"
 #include "AidanGLCamera.h"
 
 
@@ -17,7 +17,7 @@ Camera camera = Camera();
 
 // Declaration of Sierpinski Pyramid object
 SierpinskiPyramid pyramid = SierpinskiPyramid();
-MengerSponge sponge = MengerSponge();
+// MengerSponge sponge = MengerSponge();
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -153,11 +153,11 @@ int main() {
         glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
         glm::rotate(glm::radians(-90.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
     );
-    sponge.init(window, 
-        glm::vec3(0, 0, 0),                         //position in non-modelspace
-        glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-        glm::rotate(glm::radians(1.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
-    );
+    // sponge.init(window, 
+    //     glm::vec3(0, 0, 0),                         //position in non-modelspace
+    //     glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
+    //     glm::rotate(glm::radians(1.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
+    // );
 
 
     // Set callback functions for user input
@@ -193,13 +193,13 @@ int main() {
             // Reset timer
             start = glfwGetTime();
             // Draw!
-            // angle += 0.005;
+            // angle += 0.05;
             // pyramid.setRotation(angle*deltaTime, glm::vec3(0, 1, 0));
 
             // Update the camera's data based on user input
             camera.update();
-            // pyramid.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
-            sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            pyramid.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            // sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
 
             glfwSwapBuffers(window);    // actually draw
         }
