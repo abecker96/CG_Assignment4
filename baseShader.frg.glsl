@@ -3,6 +3,7 @@
 
 // in vec3 fragmentColor;
 in vec3 vPosition_modelspace1;
+in vec3 vNormal;
 
 uniform vec3 wireframeColor;
 uniform int colorType;
@@ -29,7 +30,7 @@ void main() {
     // }
     if(colorType == 0)
     {
-        color = vec4(wireframeColor, 1);
+        color = vec4(vNormal, 1);
     }
     else
     {
