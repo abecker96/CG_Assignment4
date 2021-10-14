@@ -108,7 +108,9 @@ class SierpinskiPyramid {
             //set geoTimer
             glUniform1f(geoTimerRef, (float)glfwGetTime());
 
-            glDisable(GL_CULL_FACE);  
+            glEnable(GL_CULL_FACE);  
+            glFrontFace(GL_CCW);
+            glCullFace(GL_FRONT);
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
             glVertexAttribPointer(
