@@ -3,25 +3,17 @@
 
 #include <glm/glm.hpp>
 
-
-struct Tetrahedron {
+//unused, might store normals in the future
+// but everything is currently abstracted too far to be useful anymore
+// so... refactor everything here later
+struct Tri {
     public:
-        Tetrahedron(int v0, int v1, int v2, int v3)
+        Tri(){}
+        Tri(int v1, int v2, int v3)
         {
-            verticesIdx[0] = v0;
-            verticesIdx[1] = v1;
-            verticesIdx[2] = v2;
-            verticesIdx[3] = v3;
-
-            faces[0] = glm::ivec3(verticesIdx[0], verticesIdx[1], verticesIdx[2]);
-            faces[1] = glm::ivec3(verticesIdx[3], verticesIdx[2], verticesIdx[1]);
-            faces[2] = glm::ivec3(verticesIdx[0], verticesIdx[2], verticesIdx[3]);
-            faces[3] = glm::ivec3(verticesIdx[0], verticesIdx[3], verticesIdx[1]);
+            vertices = glm::ivec3(v1, v2, v3);
         }
-        // Store all indices used in this tetrahedron
-        int verticesIdx[4];
-        // Store the relationship between faces and indices with correct spin
-        glm::ivec3 faces[4];
+        glm::ivec3 vertices;
 };
 
 struct Quad {
@@ -43,7 +35,6 @@ struct Quad {
         // Store the relationship between faces and indices with correct spin
         glm::ivec3 faces[2];
 };
-
 
 struct Cube {
     public:
@@ -70,5 +61,25 @@ struct Cube {
         int verticesIdx[8];
         // Store the relationship between faces and indices with correct spin
         Quad quads[6];
+};
+
+struct Tetrahedron {
+    public:
+        Tetrahedron(int v0, int v1, int v2, int v3)
+        {
+            verticesIdx[0] = v0;
+            verticesIdx[1] = v1;
+            verticesIdx[2] = v2;
+            verticesIdx[3] = v3;
+
+            faces[0] = glm::ivec3(verticesIdx[0], verticesIdx[1], verticesIdx[2]);
+            faces[1] = glm::ivec3(verticesIdx[3], verticesIdx[2], verticesIdx[1]);
+            faces[2] = glm::ivec3(verticesIdx[0], verticesIdx[2], verticesIdx[3]);
+            faces[3] = glm::ivec3(verticesIdx[0], verticesIdx[3], verticesIdx[1]);
+        }
+        // Store all indices used in this tetrahedron
+        int verticesIdx[4];
+        // Store the relationship between faces and indices with correct spin
+        glm::ivec3 faces[4];
 };
 #endif
