@@ -11,15 +11,19 @@
 #include "SierpinskiPyramid.h"
 #include "IBOCube.h"
 #include "AidanGLCamera.h"
+#include "UsefulFunctions.h"
 
 
 // Declaration of Camera object
 Camera camera = Camera();
 
-// Declaration of Sierpinski Pyramid object(s)
-SierpinskiPyramid p1 = SierpinskiPyramid();
+const int numTrees = 150;
+// Declaration of Sierpinski Pyramid object(s) as tree leaves
+SierpinskiPyramid leaves[numTrees];
+// Declaration of tree trunks as cubes
+IBOCube trunks[numTrees];
+// Ground is a very squished cube
 IBOCube ground = IBOCube();
-IBOCube trunk1 = IBOCube();
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -27,11 +31,17 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        p1.fractalize();
+        for(int i = 0; i < numTrees; i++)
+        {
+            leaves[i].fractalize();
+        }
     }
     else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        p1.reset();
+        for(int i = 0; i < numTrees; i++)
+        {
+            leaves[i].reset();
+        }
     }
 
 }
@@ -77,10 +87,11 @@ void glfwErrorCB(int error, const char* description) {
     fputs(description, stderr);
 }
 
+
 int main() {
     int windowWidth, windowHeight, windowSizeX, windowSizeY;    //Screen space values
 
-    const float cameraSpeed = 0.3f;
+    const float cameraSpeed = 3.0f;
     const float mouseSensitivity = 0.05f;                       //Mouse sensitivity
     float horizontalAngle = 0.0f;                               //initial camera angle
     float verticalAngle = 0.0f;                                 //initial camera angle
@@ -152,19 +163,39 @@ int main() {
 
 
     srand((int)(glfwGetTime()*100000));
+    float planeSizeX = 20;
+    float planeSizeZ = 20;
 
-    p1.init(window, 
+
+    leaves[0].init(window, 
         glm::vec3(0, 1, 0),                         //position in non-modelspace
         glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
         glm::vec3(0, 0.2, 0)
     );
-    trunk1.init(window,
+    trunks[0].init(window,
         glm::vec3(-0.15, -0.36, -0.15),                         //position in non-modelspace
         glm::scale(glm::vec3(0.3f, 1, 0.3f)),    //scale in non-modelspace
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
         glm::vec3(0.3255, 0.2078, 0.0392)    
     );
+    for(int i = 1; i < numTrees; i++)
+    {
+        float randX = randomBetween(-1, 1);
+        float randZ = randomBetween(-1, 1);
+        leaves[i].init(window, 
+            glm::vec3(0 + randX*planeSizeX, 1, 0 + randZ*planeSizeZ),                         //position in non-modelspace
+            glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
+            glm::vec3(0, 0.2, 0)
+        );
+        trunks[i].init(window,
+            glm::vec3(-0.15 + randX*planeSizeX, -0.36, -0.15 + randZ*planeSizeZ),                         //position in non-modelspace
+            glm::scale(glm::vec3(0.3f, 1, 0.3f)),    //scale in non-modelspace
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
+            glm::vec3(0.3255, 0.2078, 0.0392)    
+        );
+    }
     ground.init(window,
         glm::vec3(-25, 0, -25),
         glm::scale(glm::vec3(50, 0.1, 50)),
@@ -198,6 +229,8 @@ int main() {
         // get time since last frame
         current = glfwGetTime();
         deltaTime = current-start;
+        float deltaAngle = angle * deltaTime;
+
         // Optionally limit framerate
         //if(deltaTime > 0.006944)
         {   
@@ -206,14 +239,16 @@ int main() {
             // Reset timer
             start = glfwGetTime();
             // Draw!
-            angle += 0.2*deltaTime;
-            // p1.setRotation(angle, glm::vec3(0, 1, 0));
 
             // Update the camera's data based on user input
             camera.update();
-            p1.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            for(int i = 0; i < numTrees; i++)
+            {
+                leaves[i].rotate(deltaAngle, glm::vec3(0, 1, 0));
+                leaves[i].draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+                trunks[i].draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            }
             ground.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
-            trunk1.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
             // sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
 
             glfwSwapBuffers(window);    // actually draw
