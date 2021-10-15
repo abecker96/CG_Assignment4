@@ -44,23 +44,23 @@ class SierpinskiPyramid {
             resetPyramid();
 
             // // Load and compile shaders
-            breathingShader = LoadShaders("passthrough.vrt.glsl", "breathingShader.geo.glsl", "breathingShader.frg.glsl");
-            glUseProgram(breathingShader);
+            pyramidShader = LoadShaders("passthrough.vrt.glsl", "breathingShader.geo.glsl", "breathingShader.frg.glsl");
+            glUseProgram(pyramidShader);
 
             // initialize MVP Matrix array reference in shader
-            MVPMatrices_ref = glGetUniformLocation(breathingShader, "matrices");
+            MVPMatrices_ref = glGetUniformLocation(pyramidShader, "matrices");
             if(MVPMatrices_ref < 0)
             {   std::cerr << "couldn't find MVP matrices in shader\n";  }
 
             // initialize colorType reference in shaders
             // Used to switch colorTypes in the shader at runtime
-            colorTypeRef = glGetUniformLocation(breathingShader, "colorType");
+            colorTypeRef = glGetUniformLocation(pyramidShader, "colorType");
             if(colorTypeRef < 0)
             {   std::cerr<< "couldn't find colorType in shader\n"; }
 
             // initialize geoTimer reference in shaders
             // For breathing effect
-            geoTimerRef = glGetUniformLocation(breathingShader, "geoTimer");
+            geoTimerRef = glGetUniformLocation(pyramidShader, "geoTimer");
             if(geoTimerRef < 0)
             {   std::cerr<< "couldn't find geoTimer in shader\n"; }
 
@@ -79,15 +79,10 @@ class SierpinskiPyramid {
         // Draws every triangle in the vertexbuffer with a color corresponding to the colorbuffer
         void draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
-            // Render relative to the camera
-            updateMVPArray(viewMatrix, projectionMatrix);
-            glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
+            glUseProgram(pyramidShader);
 
-            //set geoTimer
-            glUniform1f(geoTimerRef, (float)glfwGetTime());
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
-            // glEnable(GL_CULL_FACE);
-            // glCullFace(GL_BACK);
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
             glVertexAttribPointer(
@@ -110,6 +105,13 @@ class SierpinskiPyramid {
                 (void*)0
             );
 
+            // Render relative to the camera
+            updateMVPArray(viewMatrix, projectionMatrix);
+            glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
+
+            //set geoTimer
+            glUniform1f(geoTimerRef, (float)glfwGetTime());
+
             // draw triangle faces
             if(renderFaces)
             {
@@ -121,9 +123,8 @@ class SierpinskiPyramid {
             {
                 renderAsWireframe();
             }
-
-            glDisable(GL_CULL_FACE);
             glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
         }
         void fractalize()
         {
@@ -163,7 +164,7 @@ class SierpinskiPyramid {
         // MVPMatrices will contain the same data as the 5 matrices above
         // The above matrices are just friendly names instead of requiring me to remember index 0,1,2 == O2Wmatrix etc
         glm::mat4 MVPMatrices[5];
-        GLuint breathingShader, positionBuffer, colorBuffer, vao, ibo;
+        GLuint pyramidShader, positionBuffer, colorBuffer, vao, ibo;
         GLint MVPMatrices_ref, colorTypeRef, geoTimerRef;
         GLFWwindow* window;
         glm::vec3 defaultPosition;
@@ -187,9 +188,6 @@ class SierpinskiPyramid {
             // Set polygon mode to fill
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-            glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);  
-
             // Send colorType for faces to shader
             glUniform1i(colorTypeRef, 1);
 
@@ -202,11 +200,12 @@ class SierpinskiPyramid {
         }
         void renderAsWireframe()
         {
+            // Set polygon mode to line
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
             // polygon offset line displaces the vertices towards the camera a little bit
             glEnable(GL_POLYGON_OFFSET_LINE);
             glPolygonOffset(0.1, -1);
-            // Set polygon mode to line
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                       
             // Send colorType for wireframe to shader
             glUniform1i(colorTypeRef, 0);
@@ -220,7 +219,6 @@ class SierpinskiPyramid {
             );
 
             glDisable(GL_POLYGON_OFFSET_LINE);
-
         }
 
         void setVertexBufferData()
