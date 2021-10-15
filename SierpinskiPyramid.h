@@ -20,8 +20,7 @@
 //Project-specific includes
 #include "LoadShaders.h"
 #include "Primitives.h"
-
-
+#include "UsefulFunctions.h"
 
 // SierpinskiPyramid class
 class SierpinskiPyramid {
@@ -32,6 +31,7 @@ class SierpinskiPyramid {
             renderFaces = true;
             renderWireframe = true;
             objectColor = color;
+            rotationFactor = randomBetween(-1, 1);
 
             // Set up modelMatrix as identity matrix for now
             defaultPosition = position;
@@ -147,6 +147,10 @@ class SierpinskiPyramid {
             // rotationMatrix = glm::rotate(defaultRotationMatrix, angle, axis);
             rotationMatrix = glm::rotate(angle, axis);
         }
+        void rotate(float angle, glm::vec3 axis)
+        {
+            rotationMatrix *= glm::rotate(angle*rotationFactor, axis);
+        }
         void setPosition(const glm::vec3 &position)
         {
             translationMatrix = glm::translate(glm::mat4(1), position);
@@ -173,7 +177,7 @@ class SierpinskiPyramid {
         std::vector<Tetrahedron> tetrahedrons;
         bool renderFaces, renderWireframe;
         int colorType;
-        float currentTime;
+        float currentTime, rotationFactor;
         void updateMVPArray(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
             // This order is *really* important
@@ -312,7 +316,6 @@ class SierpinskiPyramid {
             vertColors.push_back(getColor(v3));
 
             tetrahedrons.push_back(Tetrahedron(0, 1, 2, 3));
-            std::cout << "Resetting pyramids, size=" << tetrahedrons.size() << std::endl;
 
             setVertexBufferData();
             setColorBufferData();
@@ -374,7 +377,6 @@ class SierpinskiPyramid {
                 // TODO: why not just do this in the loop with the rest of 'em?
                 tetrahedrons.erase(tetrahedrons.begin());
             }
-            // std::cout << "tetrahedrons.size(): " << tetrahedrons.size() << std::endl;
             setVertexBufferData();
             setColorBufferData();
             setIndexBufferData();
