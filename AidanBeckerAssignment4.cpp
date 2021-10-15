@@ -1,6 +1,7 @@
 //General includes
 #include <stdio.h>
 #include <iostream>
+#include <cstdlib>
 
 //Opengl includes
 #include <GL/glew.h>
@@ -8,7 +9,7 @@
 
 //Project-specific includes
 #include "SierpinskiPyramid.h"
-// #include "MengerSponge.h"
+#include "IBOCube.h"
 #include "AidanGLCamera.h"
 
 
@@ -17,6 +18,8 @@ Camera camera = Camera();
 
 // Declaration of Sierpinski Pyramid object(s)
 SierpinskiPyramid p1 = SierpinskiPyramid();
+IBOCube ground = IBOCube();
+IBOCube trunk1 = IBOCube();
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -82,7 +85,7 @@ int main() {
     float horizontalAngle = 0.0f;                               //initial camera angle
     float verticalAngle = 0.0f;                                 //initial camera angle
     float initialFoV = 62.0f;                                   //initial camera field of view
-    glm::vec3 cameraPosition(0, 0, -2);                         //initial camera position
+    glm::vec3 cameraPosition(0, 1, -2);                         //initial camera position
 
     // Start a timer to limit framerate and get other information
     double start = glfwGetTime();
@@ -140,24 +143,34 @@ int main() {
         glm::perspective(
             glm::radians<float>(55),
             (float)windowSizeX/(float)windowSizeY,
-            0.0001f, 
-            1000.0f
+            0.01f, 
+            100.0f
         ),
         horizontalAngle, verticalAngle,
         cameraSpeed*2, mouseSensitivity
     );
 
+
+    srand((int)(glfwGetTime()*100000));
+
     p1.init(window, 
-        glm::vec3(0, 0, 0),                         //position in non-modelspace
+        glm::vec3(0, 1, 0),                         //position in non-modelspace
         glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
         glm::vec3(0, 0.2, 0)
     );
-    // p2.init(window, 
-    //     glm::vec3(0, -2, 0),                         //position in non-modelspace
-    //     glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-    //     glm::rotate(180.0f, glm::vec3(1, 0, 0))       //rotation in non-modelspace
-    // );
+    trunk1.init(window,
+        glm::vec3(-0.15, -0.36, -0.15),                         //position in non-modelspace
+        glm::scale(glm::vec3(0.3f, 1, 0.3f)),    //scale in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
+        glm::vec3(0.3255, 0.2078, 0.0392)    
+    );
+    ground.init(window,
+        glm::vec3(-25, 0, -25),
+        glm::scale(glm::vec3(50, 0.1, 50)),
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
+        glm::vec3(0, 0.604, 0.0902)
+    );
 
 
     // Set callback functions for user input
@@ -194,11 +207,13 @@ int main() {
             start = glfwGetTime();
             // Draw!
             angle += 0.2*deltaTime;
-            p1.setRotation(angle, glm::vec3(0, 1, 0));
+            // p1.setRotation(angle, glm::vec3(0, 1, 0));
 
             // Update the camera's data based on user input
             camera.update();
             p1.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            ground.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            trunk1.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
             // sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
 
             glfwSwapBuffers(window);    // actually draw
