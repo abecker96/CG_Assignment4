@@ -15,9 +15,8 @@
 // Declaration of Camera object
 Camera camera = Camera();
 
-// Declaration of Sierpinski Pyramid object
-SierpinskiPyramid pyramid = SierpinskiPyramid();
-// MengerSponge sponge = MengerSponge();
+// Declaration of Sierpinski Pyramid object(s)
+SierpinskiPyramid p1 = SierpinskiPyramid();
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -25,11 +24,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
-        pyramid.fractalize();
+        p1.fractalize();
     }
     else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        pyramid.reset();
+        p1.reset();
     }
 
 }
@@ -148,15 +147,16 @@ int main() {
         cameraSpeed*2, mouseSensitivity
     );
 
-    pyramid.init(window, 
+    p1.init(window, 
         glm::vec3(0, 0, 0),                         //position in non-modelspace
         glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-        glm::rotate(glm::radians(-90.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
+        glm::vec3(0, 0.2, 0)
     );
-    // sponge.init(window, 
-    //     glm::vec3(0, 0, 0),                         //position in non-modelspace
+    // p2.init(window, 
+    //     glm::vec3(0, -2, 0),                         //position in non-modelspace
     //     glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-    //     glm::rotate(glm::radians(1.0f), glm::vec3(1, 0, 0))       //rotation in non-modelspace
+    //     glm::rotate(180.0f, glm::vec3(1, 0, 0))       //rotation in non-modelspace
     // );
 
 
@@ -168,7 +168,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    float angle = 0;
+    float angle = 0.5;
 
     // Set default background color to something a little less void-colored
     glClearColor( 0.1, 0.1, 0.1 , 1.0 );
@@ -182,7 +182,7 @@ int main() {
         // Clear the screen before drawing new things
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         
-        // Check if 33 ms have elapsed since the last frame
+        // get time since last frame
         current = glfwGetTime();
         deltaTime = current-start;
         // Optionally limit framerate
@@ -193,12 +193,12 @@ int main() {
             // Reset timer
             start = glfwGetTime();
             // Draw!
-            // angle += 0.05;
-            // pyramid.setRotation(angle*deltaTime, glm::vec3(0, 1, 0));
+            angle += 0.2*deltaTime;
+            p1.setRotation(angle, glm::vec3(0, 1, 0));
 
             // Update the camera's data based on user input
             camera.update();
-            pyramid.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            p1.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
             // sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
 
             glfwSwapBuffers(window);    // actually draw
