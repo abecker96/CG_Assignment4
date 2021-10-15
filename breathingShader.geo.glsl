@@ -27,7 +27,7 @@ vec3 getNormal(vec4 v0, vec4 v1, vec4 v2)
 // According to sin() of a timer
 vec4 breathe(vec4 position, vec3 normal)
 {
-    vec3 direction = normal * (sin(geoTimer)+1.05) * 0.01;
+    vec3 direction = normal * (sin(geoTimer*3)+1.05) * 0.01;
     return position + vec4(direction, 0.0);
 }
 
