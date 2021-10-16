@@ -32,6 +32,7 @@ class SierpinskiPyramid {
             renderWireframe = true;
             objectColor = color;
             rotationFactor = randomBetween(-1, 1);
+            level = 0;
 
             // Set up modelMatrix as identity matrix for now
             defaultPosition = position;
@@ -163,6 +164,16 @@ class SierpinskiPyramid {
         {
             setPosition(defaultPosition);
         }
+        void drawAsWireframe()
+        {
+            renderFaces = false;
+            renderWireframe = true;
+        }
+        void drawAsFaces()
+        {
+            renderFaces = true;
+            renderWireframe = false;
+        }
     private:
         glm::mat4 translationMatrix, scalingMatrix, rotationMatrix;
         // MVPMatrices will contain the same data as the 5 matrices above
@@ -176,7 +187,7 @@ class SierpinskiPyramid {
         std::vector<glm::vec3> tetrahedronVerts, vertColors;
         std::vector<Tetrahedron> tetrahedrons;
         bool renderFaces, renderWireframe;
-        int colorType;
+        int colorType, level;
         float currentTime, rotationFactor;
         void updateMVPArray(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
@@ -324,62 +335,71 @@ class SierpinskiPyramid {
 
         void fractalizePyramid()
         {
-            int startSize = tetrahedrons.size();
-            for(int i = 0; i < startSize; i++)
+            level++;
+            if(level == 5)
             {
-                // Save vertex indices for clarity
-                int v0 = tetrahedrons[i].verticesIdx[0];
-                int v1 = tetrahedrons[i].verticesIdx[1];
-                int v2 = tetrahedrons[i].verticesIdx[2];
-                int v3 = tetrahedrons[i].verticesIdx[3];
-
-                // Create vertices at midpoints, add to vertex vector
-                glm::vec3 newVert = (tetrahedronVerts[v0] + tetrahedronVerts[v1])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                // Save the index of each new vertex
-                int v4 = tetrahedronVerts.size()-1;
-
-                newVert = (tetrahedronVerts[v1] + tetrahedronVerts[v2])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                int v5 = tetrahedronVerts.size()-1;
-
-                newVert = (tetrahedronVerts[v2] + tetrahedronVerts[v0])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                int v6 = tetrahedronVerts.size()-1;
-
-                newVert = (tetrahedronVerts[v0] + tetrahedronVerts[v3])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                int v7 = tetrahedronVerts.size()-1;
-
-                newVert = (tetrahedronVerts[v1] + tetrahedronVerts[v3])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                int v8 = tetrahedronVerts.size()-1;
-
-                newVert = (tetrahedronVerts[v2] + tetrahedronVerts[v3])/2.0f;
-                tetrahedronVerts.push_back(newVert);
-                vertColors.push_back(getColor(newVert));
-                int v9 = tetrahedronVerts.size()-1;
-
-                // Add 4 more tetrahedrons
-                tetrahedrons.push_back(Tetrahedron(v0, v6, v7, v4));
-                tetrahedrons.push_back(Tetrahedron(v1, v8, v5, v4));
-                tetrahedrons.push_back(Tetrahedron(v2, v9, v6, v5));
-                tetrahedrons.push_back(Tetrahedron(v3, v9, v8, v7));
+                level = 0;
+                reset();
             }
-            for(int i = 0; i < startSize; i++)
+            else
             {
-                // Remove the base tetrahedrons
-                // TODO: why not just do this in the loop with the rest of 'em?
-                tetrahedrons.erase(tetrahedrons.begin());
+                int startSize = tetrahedrons.size();
+                for(int i = 0; i < startSize; i++)
+                {
+                    // Save vertex indices for clarity
+                    int v0 = tetrahedrons[i].verticesIdx[0];
+                    int v1 = tetrahedrons[i].verticesIdx[1];
+                    int v2 = tetrahedrons[i].verticesIdx[2];
+                    int v3 = tetrahedrons[i].verticesIdx[3];
+
+                    // Create vertices at midpoints, add to vertex vector
+                    glm::vec3 newVert = (tetrahedronVerts[v0] + tetrahedronVerts[v1])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    // Save the index of each new vertex
+                    int v4 = tetrahedronVerts.size()-1;
+
+                    newVert = (tetrahedronVerts[v1] + tetrahedronVerts[v2])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    int v5 = tetrahedronVerts.size()-1;
+
+                    newVert = (tetrahedronVerts[v2] + tetrahedronVerts[v0])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    int v6 = tetrahedronVerts.size()-1;
+
+                    newVert = (tetrahedronVerts[v0] + tetrahedronVerts[v3])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    int v7 = tetrahedronVerts.size()-1;
+
+                    newVert = (tetrahedronVerts[v1] + tetrahedronVerts[v3])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    int v8 = tetrahedronVerts.size()-1;
+
+                    newVert = (tetrahedronVerts[v2] + tetrahedronVerts[v3])/2.0f;
+                    tetrahedronVerts.push_back(newVert);
+                    vertColors.push_back(getColor(newVert));
+                    int v9 = tetrahedronVerts.size()-1;
+
+                    // Add 4 more tetrahedrons
+                    tetrahedrons.push_back(Tetrahedron(v0, v6, v7, v4));
+                    tetrahedrons.push_back(Tetrahedron(v1, v8, v5, v4));
+                    tetrahedrons.push_back(Tetrahedron(v2, v9, v6, v5));
+                    tetrahedrons.push_back(Tetrahedron(v3, v9, v8, v7));
+                }
+                for(int i = 0; i < startSize; i++)
+                {
+                    // Remove the base tetrahedrons
+                    // TODO: why not just do this in the loop with the rest of 'em?
+                    tetrahedrons.erase(tetrahedrons.begin());
+                }
+                setVertexBufferData();
+                setColorBufferData();
+                setIndexBufferData();
             }
-            setVertexBufferData();
-            setColorBufferData();
-            setIndexBufferData();
         }
 };
 
