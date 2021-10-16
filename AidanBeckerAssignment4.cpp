@@ -17,8 +17,8 @@
 // Declaration of Camera object
 Camera camera = Camera();
 
-const int numTrees = 150;
-const int amountOfSnow = 500;
+const int numTrees = 100;
+const int amountOfSnow = 1000;
 // Declaration of Sierpinski Pyramid object(s) as tree leaves
 SierpinskiPyramid leaves[numTrees];
 // Declaration of tree trunks as cubes
@@ -265,53 +265,62 @@ int main() {
     float planeSizeZ = 15;
 
     leaves[0].init(window, 
-        glm::vec3(0, 1, 0),                         //position in non-modelspace
-        glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
-        glm::vec3(0, 0.2, 0)
+        glm::vec3(0, 1, 0),                                     //position in non-modelspace
+        glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),                //scale in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),    //rotation in non-modelspace
+        glm::vec3(0, 0.2, 0)                                    //color value
     );
+    for(int i = 0; i < 3; i++)
+    {
+        leaves[0].fractalize();
+    }
     trunks[0].init(window,
         glm::vec3(-0.15, -0.36, -0.15),                         //position in non-modelspace
-        glm::scale(glm::vec3(0.3f, 1, 0.3f)),    //scale in non-modelspace
-        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
-        glm::vec3(0.3255, 0.2078, 0.0392)    
+        glm::scale(glm::vec3(0.3f, 1, 0.3f)),                   //scale in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),    //rotation in non-modelspace
+        glm::vec3(0.3255, 0.2078, 0.0392)                       //color value
     );
     for(int i = 1; i < numTrees; i++)
     {
         float randX = randomBetween(-1, 1);
         float randZ = randomBetween(-1, 1);
         leaves[i].init(window, 
-            glm::vec3(0 + randX*planeSizeX, 1, 0 + randZ*planeSizeZ),                         //position in non-modelspace
-            glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),    //scale in non-modelspace
-            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
-            glm::vec3(0, 0.2, 0)
+            glm::vec3(0 + randX*planeSizeX, 1, 0 + randZ*planeSizeZ),   //position in non-modelspace
+            glm::scale(glm::vec3(1.0f, 1.0f, 1.0f)),                    //scale in non-modelspace
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),        //rotation in non-modelspace
+            glm::vec3(0, 0.2, 0)                                        //color value
         );
+        // default is a level 3 pyramid
+        for(int j = 0; j < 3; j++)
+        {
+            leaves[i].fractalize();
+        }
         trunks[i].init(window,
-            glm::vec3(-0.15 + randX*planeSizeX, -0.36, -0.15 + randZ*planeSizeZ),                         //position in non-modelspace
-            glm::scale(glm::vec3(0.3f, 1, 0.3f)),    //scale in non-modelspace
-            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),       //rotation in non-modelspace
-            glm::vec3(0.3255, 0.2078, 0.0392)    
+            glm::vec3(-0.15 + randX*planeSizeX, -0.36, -0.15 + randZ*planeSizeZ),   //position in non-modelspace
+            glm::scale(glm::vec3(0.3f, 1, 0.3f)),                                   //scale in non-modelspace
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),                    //rotation in non-modelspace
+            glm::vec3(0.3255, 0.2078, 0.0392)                                       //color value
         );
     }
     for(int i = 0; i < amountOfSnow; i++)
     {
         snow[i].init(window,
-            glm::vec3(randomBetween(-planeSizeX,planeSizeX), randomBetween(0, 5), randomBetween(-planeSizeZ, planeSizeZ)),
-            glm::scale(glm::vec3(0.05, 0.05, 0.05)),
-            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
-            glm::vec3(0.9, 0.9, 0.9)
-        );
+            glm::vec3(randomBetween(-planeSizeX,planeSizeX), randomBetween(0, 5), randomBetween(-planeSizeZ, planeSizeZ)),  //position in non-modelspace
+            glm::scale(glm::vec3(0.02, 0.02, 0.02)),                                                                        //scale in non-modelspace
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),                                                            //rotation in non-modelspace
+            glm::vec3(0.9, 0.9, 0.9)                                                                                        //color value
+        );  
     }
     ground.init(window,
-        glm::vec3(-planeSizeX, 0, -planeSizeZ),
-        glm::scale(glm::vec3(2*planeSizeX, 0.1, 2*planeSizeZ)),
-        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
-        glm::vec3(0.6745, 0.95, 0.6745)
+        glm::vec3(-planeSizeX, 0, -planeSizeZ),                     //position in non-modelspace
+        glm::scale(glm::vec3(2*planeSizeX, 0.1, 2*planeSizeZ)),     //scale in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),        //rotation in non-modelspace
+        glm::vec3(0.6745, 0.95, 0.6745)                             //color value
     );
 
     // variables for speed of object motion in scene
     float angle = 0.5;
-    float snowSpeed = 0.5;
+    float snowSpeed = 0.6;
     glm::vec3 tempPosition;
 
     // Set callback functions for user input
@@ -362,7 +371,7 @@ int main() {
             else if(spinningView)
             {
                 viewMatrix = glm::lookAt(
-                    glm::vec3((float)cos(start*0.2)*25, 20, (float)sin(start*0.2)*25),
+                    glm::vec3((float)cos(start*0.2)*15, 15, (float)sin(start*0.2)*15),
                     glm::vec3(0, 0, 0),
                     glm::vec3(0, 1, 0)
                 );
