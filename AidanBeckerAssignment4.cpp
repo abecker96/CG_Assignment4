@@ -111,6 +111,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_4:
                 camera.disableUserInput();
                 userCameraInput = false;
+                spinningView = false;
                 viewMatrix = glm::lookAt(
                     glm::vec3(0, 2.5, 0),
                     glm::vec3(0, 0, 0),
@@ -120,9 +121,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             case GLFW_KEY_5:
                 camera.disableUserInput();
                 userCameraInput = false;
+                spinningView = false;
+                viewMatrix = glm::lookAt(
+                    glm::vec3(2.5, 1.5, -1.5),
+                    glm::vec3(0, 1.5, 0),
+                    glm::vec3(0, 1, 0)
+                );
+                break;
+            case GLFW_KEY_6:        // 6 enables an aerial spinning view
+                camera.disableUserInput();
+                userCameraInput = false;
                 spinningView = true;
                 break;
-            case GLFW_KEY_6:        // 6 restores camera control to user
+            case GLFW_KEY_7:        // 7 restores camera control to user
                 camera.enableUserInput();
                 userCameraInput = true;
                 // re-initialize camera so nothing gets messed up
@@ -355,7 +366,7 @@ int main() {
         //if(deltaTime > 0.006944)
         {   
             // Optionally output frametimes
-            //std::cout << "New Frame in: " << deltaTime << std::endl;
+            // std::cout << "New Frame in: " << deltaTime << std::endl;
             // Reset timer
             start = glfwGetTime();
             // Draw!
