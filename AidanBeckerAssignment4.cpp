@@ -18,12 +18,34 @@
 Camera camera = Camera();
 
 const int numTrees = 150;
+const int amountOfSnow = 500;
 // Declaration of Sierpinski Pyramid object(s) as tree leaves
 SierpinskiPyramid leaves[numTrees];
 // Declaration of tree trunks as cubes
 IBOCube trunks[numTrees];
 // Ground is a very squished cube
 IBOCube ground = IBOCube();
+// Snow is just a lot of cubes
+IBOCube snow[amountOfSnow];
+
+// Global view/projection matrices so they're accessible from
+// glfwkeyboard callback functions
+glm::mat4 viewMatrix;
+glm::mat4 projectionMatrix;
+// A bunch of other globals that are similarly accessible from
+// glfwkeyboard callback functions
+bool userCameraInput = true;
+bool spinningView = false;
+
+const float cameraSpeed = 1.0f; 
+const float mouseSensitivity = 0.05f;                       //Mouse sensitivity
+float horizontalAngle = 0.0f;                               //initial camera angle
+float verticalAngle = 0.0f;                                 //initial camera angle
+float initialFoV = 62.0f;                                   //initial camera field of view
+glm::vec3 cameraPosition(0, 0.75, -2);                         //initial camera position
+
+
+int windowWidth, windowHeight, windowSizeX, windowSizeY;    //Screen space values
 
 // mousebutton callback function
 // A left click generates more triangles, while a right click resets to a new triangle
@@ -52,23 +74,90 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if(action == GLFW_PRESS)
     {
         switch(key){
-            case GLFW_KEY_1:        // 1-4 change colors
-                
+            case GLFW_KEY_1:        // 1-5 change camera angles
+                camera.disableUserInput();
+                userCameraInput = false;
+                spinningView = false;
+                viewMatrix = glm::lookAt(
+                    glm::vec3(0.1, 0.75, -1.5),
+                    glm::vec3(0, 0.75, 0),
+                    glm::vec3(0, 1, 0)
+                );
                 break;
             case GLFW_KEY_2:
-                
+                camera.disableUserInput();
+                userCameraInput = false;
+                spinningView = false;
+                viewMatrix = glm::lookAt(
+                    glm::vec3(30, 2, 30),
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(0, 1, 0)
+                );
                 break;
             case GLFW_KEY_3:
-                
+                camera.disableUserInput();
+                userCameraInput = false;
+                spinningView = false;
+                viewMatrix = glm::lookAt(
+                    glm::vec3(0, 30, 0),
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(1, 0, 0)
+                );
                 break;
             case GLFW_KEY_4:
-                
+                camera.disableUserInput();
+                userCameraInput = false;
+                viewMatrix = glm::lookAt(
+                    glm::vec3(0, 2.5, 0),
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(1, 0, 0)
+                );
                 break;
-            case GLFW_KEY_Q:        // Q toggles wireframe rendering
-                
+            case GLFW_KEY_5:
+                camera.disableUserInput();
+                userCameraInput = false;
+                spinningView = true;
                 break;
-            case GLFW_KEY_E:        // E toggles faces rendering
-                
+            case GLFW_KEY_6:
+                camera.enableUserInput();
+                userCameraInput = true;
+                // re-initialize camera so nothing gets messed up
+                camera.init(
+                    window, cameraPosition, 
+                    glm::perspective(
+                        glm::radians<float>(55),
+                        (float)windowSizeX/(float)windowSizeY,
+                        0.01f, 
+                        100.0f
+                    ),
+                    horizontalAngle, verticalAngle,
+                    cameraSpeed*2, mouseSensitivity,
+                    true
+                );
+                break;
+            case GLFW_KEY_W:        // Q toggles wireframe rendering
+                for(int i = 0; i < numTrees; i++)
+                {
+                    trunks[i].drawAsWireframe();
+                    leaves[i].drawAsWireframe();
+                }
+                for(int i = 0; i < amountOfSnow; i++)
+                {
+                    snow[i].drawAsWireframe();
+                }
+                ground.drawAsWireframe();
+                break;
+            case GLFW_KEY_S:        // E toggles faces rendering
+                for(int i = 0; i < numTrees; i++)
+                {
+                    trunks[i].drawAsFaces();
+                    leaves[i].drawAsFaces();
+                }
+                for(int i = 0; i < amountOfSnow; i++)
+                {
+                    snow[i].drawAsFaces();
+                }
+                ground.drawAsFaces();
                 break;
             case GLFW_KEY_T:
 
@@ -89,14 +178,6 @@ void glfwErrorCB(int error, const char* description) {
 
 
 int main() {
-    int windowWidth, windowHeight, windowSizeX, windowSizeY;    //Screen space values
-
-    const float cameraSpeed = 3.0f;
-    const float mouseSensitivity = 0.05f;                       //Mouse sensitivity
-    float horizontalAngle = 0.0f;                               //initial camera angle
-    float verticalAngle = 0.0f;                                 //initial camera angle
-    float initialFoV = 62.0f;                                   //initial camera field of view
-    glm::vec3 cameraPosition(0, 1, -2);                         //initial camera position
 
     // Start a timer to limit framerate and get other information
     double start = glfwGetTime();
@@ -158,7 +239,8 @@ int main() {
             100.0f
         ),
         horizontalAngle, verticalAngle,
-        cameraSpeed*2, mouseSensitivity
+        cameraSpeed*2, mouseSensitivity,
+        true
     );
 
 
@@ -196,13 +278,21 @@ int main() {
             glm::vec3(0.3255, 0.2078, 0.0392)    
         );
     }
+    for(int i = 0; i < amountOfSnow; i++)
+    {
+        snow[i].init(window,
+            glm::vec3(randomBetween(-25,25), randomBetween(0, 5), randomBetween(-25, 25)),
+            glm::scale(glm::vec3(0.05, 0.05, 0.05)),
+            glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
+            glm::vec3(0.9, 0.9, 0.9)
+        );
+    }
     ground.init(window,
         glm::vec3(-25, 0, -25),
         glm::scale(glm::vec3(50, 0.1, 50)),
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
-        glm::vec3(0, 0.604, 0.0902)
+        glm::vec3(0.6745, 0.95, 0.6745)
     );
-
 
     // Set callback functions for user input
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -213,9 +303,11 @@ int main() {
     glDepthFunc(GL_LESS);
 
     float angle = 0.5;
+    float snowSpeed = 0.5;
+    glm::vec3 tempPosition;
 
-    // Set default background color to something a little less void-colored
-    glClearColor( 0.1, 0.1, 0.1 , 1.0 );
+    // Set default background color to something closer to a night sky
+    glClearColor( 0.0863, 0.106, 0.211, 1.0 );
     do{
         // Update input events
         // Most tutorials do this at the end of the main loop
@@ -230,6 +322,7 @@ int main() {
         current = glfwGetTime();
         deltaTime = current-start;
         float deltaAngle = angle * deltaTime;
+        float snowDistance = snowSpeed*deltaTime;
 
         // Optionally limit framerate
         //if(deltaTime > 0.006944)
@@ -241,15 +334,41 @@ int main() {
             // Draw!
 
             // Update the camera's data based on user input
-            camera.update();
+            if(userCameraInput)
+            {
+                camera.update();
+                viewMatrix = camera.getViewMatrix();
+                projectionMatrix = camera.getProjectionMatrix();
+            }
+            else if(spinningView)
+            {
+                viewMatrix = glm::lookAt(
+                    glm::vec3((float)cos(glfwGetTime()*0.2)*25, 20, (float)sin(glfwGetTime()*0.2)*25),
+                    glm::vec3(0, 0, 0),
+                    glm::vec3(0, 1, 0)
+                );
+            }
+
             for(int i = 0; i < numTrees; i++)
             {
-                leaves[i].rotate(deltaAngle, glm::vec3(0, 1, 0));
-                leaves[i].draw(camera.getViewMatrix(), camera.getProjectionMatrix());
-                trunks[i].draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+                if(i != 0){
+                    leaves[i].rotate(deltaAngle, glm::vec3(0, 1, 0));
+                }
+                leaves[i].draw(viewMatrix, projectionMatrix);
+                trunks[i].draw(viewMatrix, projectionMatrix);
             }
-            ground.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
-            // sponge.draw(camera.getViewMatrix(), camera.getProjectionMatrix());
+            ground.draw(viewMatrix, projectionMatrix);
+            for(int i = 0; i < amountOfSnow; i++)
+            {
+                tempPosition = snow[i].getPosition();
+                tempPosition = glm::vec3(tempPosition.x, (tempPosition.y-snowDistance), tempPosition.z);
+                if(tempPosition.y < 0)
+                {
+                    tempPosition = tempPosition + glm::vec3(0, 5, 0);
+                }
+                snow[i].setPosition(tempPosition);
+                snow[i].draw(viewMatrix, projectionMatrix);
+            }
 
             glfwSwapBuffers(window);    // actually draw
         }
