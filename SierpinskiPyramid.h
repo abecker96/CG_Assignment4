@@ -318,6 +318,7 @@ class SierpinskiPyramid {
             tetrahedronVerts.clear();
             vertColors.clear();
             tetrahedrons.clear();
+            level = 0;
 
             // A transformation to rotate initial tetrahedron to a more normal orientation
             glm::mat4 pointUpMatrix = glm::rotate(glm::radians(-90.0f), glm::vec3(1, 0, 0));
