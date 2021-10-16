@@ -30,6 +30,7 @@ class IBOCube {
             renderFaces = true;
             renderWireframe = true;
             scalingMatrix = scale;
+            currentPosition = position;
             translationMatrix = glm::translate(position);
             rotationMatrix = glm::mat4(1);
 
@@ -139,11 +140,26 @@ class IBOCube {
         }
         void setPosition(const glm::vec3 &position)
         {
+            currentPosition = position;
             translationMatrix = glm::translate(glm::mat4(1), position);
+        }
+        glm::vec3 getPosition()
+        {
+            return currentPosition;
         }
         void translate(const glm::vec3 &translation)
         {
             translationMatrix = glm::translate(translationMatrix, translation);
+        }
+        void drawAsWireframe()
+        {
+            renderFaces = false;
+            renderWireframe = true;
+        }
+        void drawAsFaces()
+        {
+            renderFaces = true;
+            renderWireframe = false;
         }
     private:
         glm::mat4 objectToWorldMatrix, translationMatrix, scalingMatrix, rotationMatrix;
@@ -154,6 +170,7 @@ class IBOCube {
         GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef, geoTimerRef;
         GLFWwindow* window;
         glm::vec3 wireframeColor = glm::vec3(1.0, 1.0, 1.0);    //Color for the wireframe
+        glm::vec3 currentPosition;
         GLfloat cubeColors[24];
         GLfloat cubeVerts[24] = {
             0.0f, 0.0f, 0.0f,
