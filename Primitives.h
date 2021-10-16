@@ -16,6 +16,7 @@ struct Tri {
         glm::ivec3 vertices;
 };
 
+// A rectangular face made of two triangles
 struct Quad {
     public:
         Quad(){}
@@ -36,6 +37,7 @@ struct Quad {
         glm::ivec3 faces[2];
 };
 
+// A cube made of 6 quads
 struct Cube {
     public:
         Cube(int v0, int v1, int v2, int v3, int v4, int v5, int v6, int v7)
@@ -63,6 +65,7 @@ struct Cube {
         Quad quads[6];
 };
 
+// A tetrahedron made of 4 triangles
 struct Tetrahedron {
     public:
         Tetrahedron(int v0, int v1, int v2, int v3)

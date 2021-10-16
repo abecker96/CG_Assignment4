@@ -27,14 +27,16 @@ class IBOCube {
         IBOCube(){}
         void init(GLFWwindow* window, glm::vec3 position, glm::mat4 scale, glm::mat4 rotation, glm::vec3 color)
         {
+            // Data initialization
             renderFaces = true;
             renderWireframe = true;
             scalingMatrix = scale;
             currentPosition = position;
             translationMatrix = glm::translate(position);
             rotationMatrix = glm::mat4(1);
+            setCubeColors(color);
 
-            // // Load and compile shaders
+            // Load and compile shaders
             cubeShader = LoadShaders("o2wShader.vrt.glsl", "passthrough.geo.glsl", "colorShader.frg.glsl");
             glUseProgram(cubeShader);
 
@@ -56,14 +58,15 @@ class IBOCube {
             // Set initial wireframe color
             glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
 
+            //Generate VAO for this cube
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
 
+            // Generate position, color, and IBO buffers for this cube
             glGenBuffers(1, &positionBuffer);
             glGenBuffers(1, &colorBuffer);
             glGenBuffers(1, &ibo);
 
-            setCubeColors(color);
 
             setVertexBufferData();
             setColorBufferData();
@@ -73,12 +76,18 @@ class IBOCube {
         // Draws every triangle in the vertexbuffer with a color corresponding to the colorbuffer
         void draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
+            // Use shader for the cube
+            // Doesn't need to be done every frame unless there are non-cube
+            // objects in scene
             glUseProgram(cubeShader);
 
+            // cull backfaces
             glEnable(GL_CULL_FACE);  
 
+            // Use IBO
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
+            // Use position buffer
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
             glVertexAttribPointer(
@@ -90,6 +99,7 @@ class IBOCube {
                 (void*)0
             );
 
+            // Use color buffer
             glEnableVertexAttribArray(1);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
             glVertexAttribPointer(
@@ -103,7 +113,7 @@ class IBOCube {
 
             // Render relative to the camera
             updateMVPArray(viewMatrix, projectionMatrix);
-            glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
+            glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 5 matrices
 
             // Set wireframe color
             glUniform3fv(wireframeColorRef, 1, glm::value_ptr(wireframeColor));
@@ -120,11 +130,14 @@ class IBOCube {
                 renderAsWireframe();
             }
 
+            // Disable cull face in case next object doesn't want to cull faces
             glDisable(GL_CULL_FACE);  
 
+            // disable position/color buffers
             glDisableVertexAttribArray(0);
             glDisableVertexAttribArray(1);
         }
+        //  Toggle wireframe/faces on and off
         void toggleWireframe()
         {
             renderWireframe = !renderWireframe;
@@ -133,24 +146,7 @@ class IBOCube {
         {
             renderFaces = !renderFaces;
         }
-        void setRotation(float angle, glm::vec3 axis)
-        {
-            // rotationMatrix = glm::rotate(rotationMatrix, angle, axis);
-            rotationMatrix = glm::rotate(angle, axis);
-        }
-        void setPosition(const glm::vec3 &position)
-        {
-            currentPosition = position;
-            translationMatrix = glm::translate(glm::mat4(1), position);
-        }
-        glm::vec3 getPosition()
-        {
-            return currentPosition;
-        }
-        void translate(const glm::vec3 &translation)
-        {
-            translationMatrix = glm::translate(translationMatrix, translation);
-        }
+        // Only draw as wireframe/faces
         void drawAsWireframe()
         {
             renderFaces = false;
@@ -161,19 +157,39 @@ class IBOCube {
             renderFaces = true;
             renderWireframe = false;
         }
+        void setRotation(float angle, glm::vec3 axis)
+        {
+            rotationMatrix = glm::rotate(angle, axis);
+        }
+        //TODO: rotate function
+        void setPosition(const glm::vec3 &position)
+        {
+            currentPosition = position;
+            translationMatrix = glm::translate(glm::mat4(1), position);
+        }
+        // translate function moves object relative to previous location
+        void translate(const glm::vec3 &translation)
+        {
+            translationMatrix = glm::translate(translationMatrix, translation);
+        }
+        // returns xyz position in worldspace
+        glm::vec3 getPosition()
+        {
+            return currentPosition;
+        }
     private:
-        glm::mat4 objectToWorldMatrix, translationMatrix, scalingMatrix, rotationMatrix;
-        // MVPMatrices will contain the same data as the 5 matrices above
-        // The above matrices are just friendly names instead of requiring me to remember index 0 == O2Wmatrix etc
+        glm::mat4 translationMatrix, scalingMatrix, rotationMatrix;
+        // MVPMatrices will contain the same data as the 3 matrices above, as well as passed view & projection matrices
+        // The above matrices are just friendly names instead of requiring me to remember index 0 == translationMatrix etc
         glm::mat4 MVPMatrices[5];
-        GLuint cubeShader, positionBuffer, colorBuffer, vao, ibo;
-        GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef, geoTimerRef;
+        GLuint cubeShader, vao, ibo, positionBuffer, colorBuffer;
+        GLint MVPMatrices_ref, wireframeColorRef, colorTypeRef;     //glUniform location references for shader
         GLFWwindow* window;
         glm::vec3 wireframeColor = glm::vec3(1.0, 1.0, 1.0);    //Color for the wireframe
-        glm::vec3 currentPosition;
-        GLfloat cubeColors[24];
-        GLfloat cubeVerts[24] = {
-            0.0f, 0.0f, 0.0f,
+        glm::vec3 currentPosition;      //xyz position instead of pure translation matrix
+        GLfloat cubeColors[24];         //color data for each vertex
+        GLfloat cubeVerts[24] = {       //Basic cube coordinates
+            0.0f, 0.0f, 0.0f,           //TODO: center on origin for easy positioning in worldspace
             1.0f, 0.0f, 0.0f,
             1.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
@@ -182,20 +198,18 @@ class IBOCube {
             1.0f, 1.0f, 1.0f,
             1.0f, 0.0f, 1.0f
         };
-        unsigned int cubeIndices[36];
+        unsigned int cubeIndices[36];   // Indices to be passed to IBO
         bool renderFaces, renderWireframe;
-        int colorType;
-
+        // update existing MVP array from matrices with friendly names
         void updateMVPArray(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
-            // This order is *really* important
+            // This order is really important
             MVPMatrices[0] = scalingMatrix;
             MVPMatrices[1] = rotationMatrix;
             MVPMatrices[2] = translationMatrix;
             MVPMatrices[3] = viewMatrix;
             MVPMatrices[4] = projectionMatrix;
         }
-
         void renderAsFaces()
         {  
             // Set polygon mode to fill
@@ -235,6 +249,7 @@ class IBOCube {
 
             glDisable(GL_POLYGON_OFFSET_LINE);
         }
+        // Generates color array from a given color
         void setCubeColors(glm::vec3 color)
         {
             for(int i = 0; i < 8; i++)
@@ -244,6 +259,7 @@ class IBOCube {
                 cubeColors[i*3+2] = color.z;
             }
         }
+        // Sets VBO data from vertex position array
         void setVertexBufferData()
         {
             glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
@@ -254,6 +270,7 @@ class IBOCube {
                 GL_STATIC_DRAW
             );
         }
+        // Sets color buffer data from color array
         void setColorBufferData()
         {
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
@@ -264,8 +281,12 @@ class IBOCube {
                 GL_STATIC_DRAW
             );
         }
+        // Generate IBO
         void setIndexBufferData()
         {
+            // I'll be honest here, Cube from Primitives.h isn't necessary here
+            // But this current IBOCube class started off as a MengerSponge, where it was necessary
+            // I just didn't want to re-write the code here
             Cube cube = Cube(0, 1, 2, 3, 4, 5, 6, 7);
             for(int i = 0; i < 6; i++)
             {
@@ -276,7 +297,6 @@ class IBOCube {
                 cubeIndices[i*6 + 4] = cube.quads[i].faces[1].y;
                 cubeIndices[i*6 + 5] = cube.quads[i].faces[1].z;
             }
-
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
             glBufferData(
                 GL_ELEMENT_ARRAY_BUFFER, 
@@ -286,6 +306,5 @@ class IBOCube {
             );
         }
 };
-
 
 #endif

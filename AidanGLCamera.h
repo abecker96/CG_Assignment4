@@ -39,6 +39,7 @@ class Camera {
             currentTime = glfwGetTime();
             deltaTime = currentTime - lastTime;
 
+            // Sometimes need to disable user input
             if(allowInput)
             {
                 // Get mouse position

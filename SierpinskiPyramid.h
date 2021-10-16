@@ -1,5 +1,3 @@
-
-
 #ifndef SIERPINSKIPYRAMID_H
 #define SIERPINSKIPYRAMID_H
 
@@ -65,9 +63,11 @@ class SierpinskiPyramid {
             if(geoTimerRef < 0)
             {   std::cerr<< "couldn't find geoTimer in shader\n"; }
 
+            // Generate VAO
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
 
+            // Generate VBO, IBO, and color buffers
             glGenBuffers(1, &positionBuffer);
             glGenBuffers(1, &ibo);
             glGenBuffers(1, &colorBuffer);
@@ -80,10 +80,13 @@ class SierpinskiPyramid {
         // Draws every triangle in the vertexbuffer with a color corresponding to the colorbuffer
         void draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
+            // Swap to necessary shader
             glUseProgram(pyramidShader);
 
+            // Bind IBO
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
+            // Bind VBO
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
             glVertexAttribPointer(
@@ -95,6 +98,7 @@ class SierpinskiPyramid {
                 (void*)0
             );
 
+            // Bind color buffer
             glEnableVertexAttribArray(1);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
             glVertexAttribPointer(
@@ -110,7 +114,7 @@ class SierpinskiPyramid {
             updateMVPArray(viewMatrix, projectionMatrix);
             glUniformMatrix4fv(MVPMatrices_ref, 5, GL_FALSE, glm::value_ptr(MVPMatrices[0])); // Passing 6 matrices
 
-            //set geoTimer
+            //set timer in geometry shader
             glUniform1f(geoTimerRef, (float)glfwGetTime());
 
             // draw triangle faces
@@ -124,6 +128,8 @@ class SierpinskiPyramid {
             {
                 renderAsWireframe();
             }
+
+            // reset bound buffers to original state
             glDisableVertexAttribArray(0);
             glDisableVertexAttribArray(1);
         }
@@ -145,7 +151,6 @@ class SierpinskiPyramid {
         }
         void setRotation(float angle, glm::vec3 axis)
         {
-            // rotationMatrix = glm::rotate(defaultRotationMatrix, angle, axis);
             rotationMatrix = glm::rotate(angle, axis);
         }
         void rotate(float angle, glm::vec3 axis)
@@ -176,19 +181,20 @@ class SierpinskiPyramid {
         }
     private:
         glm::mat4 translationMatrix, scalingMatrix, rotationMatrix;
-        // MVPMatrices will contain the same data as the 5 matrices above
+        // MVPMatrices will contain the same data as the 3 matrices above, as well as passed View & Projection matrices
         // The above matrices are just friendly names instead of requiring me to remember index 0,1,2 == O2Wmatrix etc
         glm::mat4 MVPMatrices[5];
         GLuint pyramidShader, positionBuffer, colorBuffer, vao, ibo;
         GLint MVPMatrices_ref, colorTypeRef, geoTimerRef;
         GLFWwindow* window;
-        glm::vec3 defaultPosition;
-        glm::vec3 objectColor;    //Color for the base shape
+        glm::vec3 defaultPosition;  //Probably unecessary
+        glm::vec3 objectColor;      //Color for the base shape
         std::vector<glm::vec3> tetrahedronVerts, vertColors;
         std::vector<Tetrahedron> tetrahedrons;
         bool renderFaces, renderWireframe;
         int colorType, level;
-        float currentTime, rotationFactor;
+        float rotationFactor;
+        // places matrices with friendly names in the correct position of an array
         void updateMVPArray(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
         {
             // This order is *really* important
@@ -235,7 +241,7 @@ class SierpinskiPyramid {
 
             glDisable(GL_POLYGON_OFFSET_LINE);
         }
-
+        // Sets data in the VBO based on fractal vertex data
         void setVertexBufferData()
         {
             GLfloat* vertices = new GLfloat[tetrahedronVerts.size()*3];
@@ -255,6 +261,7 @@ class SierpinskiPyramid {
             );
             delete[] vertices;
         }
+        // Sets data in the color buffer based on vertex color data
         void setColorBufferData()
         {
             GLfloat* vertexColors = new GLfloat[tetrahedronVerts.size()*3];
@@ -274,11 +281,13 @@ class SierpinskiPyramid {
             );
             delete[] vertexColors;
         }
-        glm::vec3 getColor(glm::vec3 vertexPos)
+        // generates a color based on object color and a passed vertex position
+        glm::vec3 getColor(const glm::vec3 &vertexPos)
         {
             static float colorMultiplier = 2;
             return objectColor + objectColor*colorMultiplier*vertexPos.y;
         }
+        // Sets data in IBO based on fractal index data
         void setIndexBufferData()
         {
             unsigned int* triIndices = new unsigned int[tetrahedrons.size()*4*3];
@@ -303,20 +312,21 @@ class SierpinskiPyramid {
             );
             delete[] triIndices;
         }
-
+        // Resets fractal to a default pyramid
         void resetPyramid()
         {
             tetrahedronVerts.clear();
             vertColors.clear();
             tetrahedrons.clear();
 
+            // A transformation to rotate initial tetrahedron to a more normal orientation
             glm::mat4 pointUpMatrix = glm::rotate(glm::radians(-90.0f), glm::vec3(1, 0, 0));
             glm::vec4 v0 = pointUpMatrix * glm::vec4(0.0, 0.0, 1, 0);
             glm::vec4 v1 = pointUpMatrix * glm::vec4(0.0, 0.942809, -0.33333, 0);
             glm::vec4 v2 = pointUpMatrix * glm::vec4(-0.816497, -0.471405, -0.333333, 0);
             glm::vec4 v3 = pointUpMatrix * glm::vec4(0.816497, -0.471405, -0.333333, 0);
 
-
+            // Place vertices, color, and index data in vectors
             tetrahedronVerts.push_back(glm::vec3(v0.x, v0.y, v0.z));
             vertColors.push_back(getColor(v0));
             tetrahedronVerts.push_back(glm::vec3(v1.x, v1.y, v1.z));
@@ -328,13 +338,15 @@ class SierpinskiPyramid {
 
             tetrahedrons.push_back(Tetrahedron(0, 1, 2, 3));
 
+            // set data in graphics card
             setVertexBufferData();
             setColorBufferData();
             setIndexBufferData();
         }
-
+        // Generates the next level of a sierpinski pyramid based on current tetrahedrons
         void fractalizePyramid()
         {
+            // Don't let tetrahedron go past level 5 for performance/crashing reasons
             level++;
             if(level == 5)
             {
@@ -343,7 +355,9 @@ class SierpinskiPyramid {
             }
             else
             {
+                // Keep track of the number of tetrahedrons we started with
                 int startSize = tetrahedrons.size();
+                // For each initial tetrahedron, generate 4 more
                 for(int i = 0; i < startSize; i++)
                 {
                     // Save vertex indices for clarity
@@ -352,9 +366,10 @@ class SierpinskiPyramid {
                     int v2 = tetrahedrons[i].verticesIdx[2];
                     int v3 = tetrahedrons[i].verticesIdx[3];
 
-                    // Create vertices at midpoints, add to vertex vector
+                    // Create vertices at midpoint of each edge, add to vertex vector
                     glm::vec3 newVert = (tetrahedronVerts[v0] + tetrahedronVerts[v1])/2.0f;
                     tetrahedronVerts.push_back(newVert);
+                    // Generate color data for the new vertex as well
                     vertColors.push_back(getColor(newVert));
                     // Save the index of each new vertex
                     int v4 = tetrahedronVerts.size()-1;
@@ -384,16 +399,18 @@ class SierpinskiPyramid {
                     vertColors.push_back(getColor(newVert));
                     int v9 = tetrahedronVerts.size()-1;
 
-                    // Add 4 more tetrahedrons
+                    // Add 4 new tetrahedrons
                     tetrahedrons.push_back(Tetrahedron(v0, v6, v7, v4));
                     tetrahedrons.push_back(Tetrahedron(v1, v8, v5, v4));
                     tetrahedrons.push_back(Tetrahedron(v2, v9, v6, v5));
                     tetrahedrons.push_back(Tetrahedron(v3, v9, v8, v7));
+                    
                 }
                 for(int i = 0; i < startSize; i++)
                 {
                     // Remove the base tetrahedrons
                     // TODO: why not just do this in the loop with the rest of 'em?
+                    // Oh well, it's not like this is really a large performance hit
                     tetrahedrons.erase(tetrahedrons.begin());
                 }
                 setVertexBufferData();
@@ -402,6 +419,5 @@ class SierpinskiPyramid {
             }
         }
 };
-
 
 #endif
