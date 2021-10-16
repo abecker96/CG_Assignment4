@@ -37,6 +37,8 @@ glm::mat4 projectionMatrix;
 bool userCameraInput = true;
 bool spinningView = false;
 
+// I really need to implement a user interaction method that
+// requires fewer global variables
 const float cameraSpeed = 1.0f; 
 const float mouseSensitivity = 0.05f;                       //Mouse sensitivity
 float horizontalAngle = 0.0f;                               //initial camera angle
@@ -44,11 +46,11 @@ float verticalAngle = 0.0f;                                 //initial camera ang
 float initialFoV = 62.0f;                                   //initial camera field of view
 glm::vec3 cameraPosition(0, 0.75, -2);                         //initial camera position
 
-
 int windowWidth, windowHeight, windowSizeX, windowSizeY;    //Screen space values
 
 // mousebutton callback function
-// A left click generates more triangles, while a right click resets to a new triangle
+// Performs an action once, the first time a mouse button is pressed
+// A left click generates more triangles, while a right click resets to original triangles
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -68,6 +70,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 }
 
+// keyboard callback function
+// Performs an action once, the first time a key is pressed
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {   
     // Check that this event is for an initial key press
@@ -118,7 +122,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 userCameraInput = false;
                 spinningView = true;
                 break;
-            case GLFW_KEY_6:
+            case GLFW_KEY_6:        // 6 restores camera control to user
                 camera.enableUserInput();
                 userCameraInput = true;
                 // re-initialize camera so nothing gets messed up
@@ -135,7 +139,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                     true
                 );
                 break;
-            case GLFW_KEY_W:        // Q toggles wireframe rendering
+            case GLFW_KEY_Q:        // Q toggles wireframe rendering
                 for(int i = 0; i < numTrees; i++)
                 {
                     trunks[i].drawAsWireframe();
@@ -147,7 +151,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 ground.drawAsWireframe();
                 break;
-            case GLFW_KEY_S:        // E toggles faces rendering
+            case GLFW_KEY_E:        // E toggles faces rendering
                 for(int i = 0; i < numTrees; i++)
                 {
                     trunks[i].drawAsFaces();
@@ -159,11 +163,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 ground.drawAsFaces();
                 break;
-            case GLFW_KEY_T:
-
-                break;
-            case GLFW_KEY_R:
-
+            case GLFW_KEY_R:        // R resets to both wireframe and faces rendering
+                for(int i = 0; i < numTrees; i++)
+                {
+                    trunks[i].drawAsFaces();        // guarantee faces are showing, but no wireframe
+                    trunks[i].toggleWireframe();    // turn wireframe back on
+                    leaves[i].drawAsFaces();
+                    leaves[i].toggleWireframe();
+                }
+                for(int i = 0; i < amountOfSnow; i++)
+                {
+                    snow[i].drawAsFaces();
+                    snow[i].toggleWireframe();
+                }
+                ground.drawAsFaces();
+                ground.toggleWireframe();
                 break;
             default:
                 break;
@@ -172,26 +186,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 // Error callback for glfw window problems
+// In theory, this should be called automatically
+// But I've never seen it run so I don't really know.
 void glfwErrorCB(int error, const char* description) {
     fputs(description, stderr);
 }
 
 
 int main() {
-
-    // Start a timer to limit framerate and get other information
+    // Start a timer to check frame times
     double start = glfwGetTime();
     double current = start;
     double deltaTime;
 
-    //Initialize variables for translation and rotation speed
-    glm::vec3 translation = glm::vec3(0.01, 0, 0);
-    glm::vec3 rotationAxis = glm::vec3(0, 1, 0);
-    float rotationSpeed = 0.2;
-    float currentRotation = 0;
-
     // Necessary due to glew bug
     glewExperimental = true;
+
+    // hook in our GLFW error callback
     glfwSetErrorCallback(glfwErrorCB);
 
     // Initialize glfw
@@ -213,6 +224,8 @@ int main() {
     // Check size of screen's available work area
     // This is the area not taken up by taskbars and other OS objects
     glfwGetMonitorWorkarea(glfwGetPrimaryMonitor(), &windowWidth, &windowHeight, &windowSizeX, &windowSizeY);
+    
+    // make window
     window = glfwCreateWindow( windowSizeX, windowSizeY, "Aidan Becker Assignment 4", NULL, NULL);
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible.\n" );
@@ -226,6 +239,7 @@ int main() {
     }
 
     // Ensure we can capture the escape key and mouse clicks being pressed below
+    // This sets a flag that a key has been pressed, even if it was between frames
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE);
 
@@ -243,11 +257,12 @@ int main() {
         true
     );
 
-
+    // initialize random number generator for random trees
     srand((int)(glfwGetTime()*100000));
-    float planeSizeX = 20;
-    float planeSizeZ = 20;
 
+    // set size of the base platform
+    float planeSizeX = 15;
+    float planeSizeZ = 15;
 
     leaves[0].init(window, 
         glm::vec3(0, 1, 0),                         //position in non-modelspace
@@ -281,30 +296,31 @@ int main() {
     for(int i = 0; i < amountOfSnow; i++)
     {
         snow[i].init(window,
-            glm::vec3(randomBetween(-25,25), randomBetween(0, 5), randomBetween(-25, 25)),
+            glm::vec3(randomBetween(-planeSizeX,planeSizeX), randomBetween(0, 5), randomBetween(-planeSizeZ, planeSizeZ)),
             glm::scale(glm::vec3(0.05, 0.05, 0.05)),
             glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
             glm::vec3(0.9, 0.9, 0.9)
         );
     }
     ground.init(window,
-        glm::vec3(-25, 0, -25),
-        glm::scale(glm::vec3(50, 0.1, 50)),
+        glm::vec3(-planeSizeX, 0, -planeSizeZ),
+        glm::scale(glm::vec3(2*planeSizeX, 0.1, 2*planeSizeZ)),
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),
         glm::vec3(0.6745, 0.95, 0.6745)
     );
+
+    // variables for speed of object motion in scene
+    float angle = 0.5;
+    float snowSpeed = 0.5;
+    glm::vec3 tempPosition;
 
     // Set callback functions for user input
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetKeyCallback(window, key_callback);
 
-    // Enable depth test so things render based on distance from camera
+    // Enable depth test so objects render based on closest distance from camera
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
-    float angle = 0.5;
-    float snowSpeed = 0.5;
-    glm::vec3 tempPosition;
 
     // Set default background color to something closer to a night sky
     glClearColor( 0.0863, 0.106, 0.211, 1.0 );
@@ -325,6 +341,8 @@ int main() {
         float snowDistance = snowSpeed*deltaTime;
 
         // Optionally limit framerate
+        // On my computer this does nothing: my framerate is automatically limited to
+        // my screen's refresh rate. Need to test if this is the same on windows.
         //if(deltaTime > 0.006944)
         {   
             // Optionally output frametimes
@@ -340,10 +358,11 @@ int main() {
                 viewMatrix = camera.getViewMatrix();
                 projectionMatrix = camera.getProjectionMatrix();
             }
+            // If the spinning view is active, rotate slowly
             else if(spinningView)
             {
                 viewMatrix = glm::lookAt(
-                    glm::vec3((float)cos(glfwGetTime()*0.2)*25, 20, (float)sin(glfwGetTime()*0.2)*25),
+                    glm::vec3((float)cos(start*0.2)*25, 20, (float)sin(start*0.2)*25),
                     glm::vec3(0, 0, 0),
                     glm::vec3(0, 1, 0)
                 );
@@ -351,15 +370,17 @@ int main() {
 
             for(int i = 0; i < numTrees; i++)
             {
+                // rotate every tree that isn't the first one
                 if(i != 0){
                     leaves[i].rotate(deltaAngle, glm::vec3(0, 1, 0));
                 }
+                // draw leaves and trunks
                 leaves[i].draw(viewMatrix, projectionMatrix);
                 trunks[i].draw(viewMatrix, projectionMatrix);
             }
-            ground.draw(viewMatrix, projectionMatrix);
             for(int i = 0; i < amountOfSnow; i++)
             {
+                // make snow fall
                 tempPosition = snow[i].getPosition();
                 tempPosition = glm::vec3(tempPosition.x, (tempPosition.y-snowDistance), tempPosition.z);
                 if(tempPosition.y < 0)
@@ -367,16 +388,18 @@ int main() {
                     tempPosition = tempPosition + glm::vec3(0, 5, 0);
                 }
                 snow[i].setPosition(tempPosition);
+                // draw snow
                 snow[i].draw(viewMatrix, projectionMatrix);
             }
+            ground.draw(viewMatrix, projectionMatrix);
 
-            glfwSwapBuffers(window);    // actually draw
+            // actually draw created frame to screen
+            glfwSwapBuffers(window);    
         }
 
     } // Check if the ESC key was pressed or the window was closed
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
         glfwWindowShouldClose(window) == 0);
     
-
     return 0;
 }
