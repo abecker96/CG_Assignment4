@@ -25,6 +25,8 @@ SierpinskiPyramid leaves[numTrees];
 IBOCube trunks[numTrees];
 // Ground is a very squished cube
 IBOCube ground = IBOCube();
+// Moon is also just a cube
+IBOCube moon = IBOCube();
 // Snow is just a lot of cubes
 IBOCube snow[amountOfSnow];
 
@@ -161,6 +163,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                     snow[i].drawAsWireframe();
                 }
                 ground.drawAsWireframe();
+                moon.drawAsWireframe();
                 break;
             case GLFW_KEY_E:        // E toggles faces rendering
                 for(int i = 0; i < numTrees; i++)
@@ -173,6 +176,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                     snow[i].drawAsFaces();
                 }
                 ground.drawAsFaces();
+                moon.drawAsFaces();
                 break;
             case GLFW_KEY_R:        // R resets to both wireframe and faces rendering
                 for(int i = 0; i < numTrees; i++)
@@ -189,6 +193,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 }
                 ground.drawAsFaces();
                 ground.toggleWireframe();
+                moon.drawAsFaces();
+                moon.toggleWireframe();
                 break;
             default:
                 break;
@@ -328,6 +334,12 @@ int main() {
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),        //rotation in non-modelspace
         glm::vec3(0.6745, 0.95, 0.6745)                             //color value
     );
+    moon.init(window,
+        glm::vec3(7, 10, 7),                     //position in non-modelspace
+        glm::scale(glm::vec3(1, 1, 1)),     //scale in non-modelspace
+        glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),        //rotation in non-modelspace
+        glm::vec3(0.678, 0.847, 0.902)        
+    );
 
     // variables for speed of object motion in scene
     float angle = 0.5;
@@ -412,6 +424,7 @@ int main() {
                 snow[i].draw(viewMatrix, projectionMatrix);
             }
             ground.draw(viewMatrix, projectionMatrix);
+            moon.draw(viewMatrix, projectionMatrix);
 
             // actually draw created frame to screen
             glfwSwapBuffers(window);    
