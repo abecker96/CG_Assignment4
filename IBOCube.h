@@ -189,14 +189,14 @@ class IBOCube {
         glm::vec3 currentPosition;      //xyz position instead of pure translation matrix
         GLfloat cubeColors[24];         //color data for each vertex
         GLfloat cubeVerts[24] = {       //Basic cube coordinates
-            0.0f, 0.0f, 0.0f,           //TODO: center on origin for easy positioning in worldspace
-            1.0f, 0.0f, 0.0f,
-            1.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f, 0.0f, 1.0f
+            -0.5, -0.5, -0.5,           //TODO: center on origin for easy positioning in worldspace
+            0.5, -0.5, -0.5,
+            0.5, 0.5, -0.5,
+            -0.5, 0.5, -0.5,
+            -0.5, -0.5, 0.5,
+            -0.5, 0.5, 0.5,
+            0.5, 0.5, 0.5,
+            0.5, -0.5, 0.5
         };
         unsigned int cubeIndices[36];   // Indices to be passed to IBO
         bool renderFaces, renderWireframe;

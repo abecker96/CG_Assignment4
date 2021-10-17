@@ -286,8 +286,8 @@ int main() {
         leaves[0].fractalize();
     }
     trunks[0].init(window,
-        glm::vec3(-0.15, -0.36, -0.15),                         //position in non-modelspace
-        glm::scale(glm::vec3(0.3f, 1, 0.3f)),                   //scale in non-modelspace
+        glm::vec3(0, 0.3, 0),                         //position in non-modelspace
+        glm::scale(glm::vec3(0.3f, 0.7, 0.3f)),                   //scale in non-modelspace
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),    //rotation in non-modelspace
         glm::vec3(0.3255, 0.2078, 0.0392)                       //color value
     );
@@ -307,8 +307,8 @@ int main() {
             leaves[i].fractalize();
         }
         trunks[i].init(window,
-            glm::vec3(-0.15 + randX*planeSizeX, -0.36, -0.15 + randZ*planeSizeZ),   //position in non-modelspace
-            glm::scale(glm::vec3(0.3f, 1, 0.3f)),                                   //scale in non-modelspace
+            glm::vec3(randX*planeSizeX, 0.3, randZ*planeSizeZ),   //position in non-modelspace
+            glm::scale(glm::vec3(0.3f, 0.7, 0.3f)),                                   //scale in non-modelspace
             glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),                    //rotation in non-modelspace
             glm::vec3(0.3255, 0.2078, 0.0392)                                       //color value
         );
@@ -323,7 +323,7 @@ int main() {
         );  
     }
     ground.init(window,
-        glm::vec3(-planeSizeX, 0, -planeSizeZ),                     //position in non-modelspace
+        glm::vec3(0, 0, 0),                     //position in non-modelspace
         glm::scale(glm::vec3(2*planeSizeX, 0.1, 2*planeSizeZ)),     //scale in non-modelspace
         glm::rotate(glm::radians(0.0f), glm::vec3(1, 0, 0)),        //rotation in non-modelspace
         glm::vec3(0.6745, 0.95, 0.6745)                             //color value
